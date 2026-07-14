@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Decklist Overlay</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      background: transparent;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+
+    #panel {
+      position: absolute;
+      top: 60px;
+      right: 60px;
+      width: 400px;
+      height: 960px;
+      background: rgba(10,10,10,0.88);
+      backdrop-filter: blur(12px);
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.07);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      transform: translateX(20px);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+
+    #panel.visible {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .panel-header {
+      padding: 16px 20px 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      flex-shrink: 0;
+      border-top: 3px solid #7c3aed;
+      border-radius: 12px 12px 0 0;
+    }
+
+    .header-player {
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .header-deck {
+      font-size: 13px;
+      color: rgba(255,255,255,0.5);
+      margin-top: 2px;
+      font-style: italic;
+    }
+
+    .header-count {
+      font-size: 12px;
+      color: rgba(255,255,255,0.35);
+      margin-top: 2px;
+    }
+
+    /* No scrolling — content is zoom-scaled to fit */
+    .scroll-area {
+      overflow: hidden;
+      flex: 1;
+      padding: 8px 0 12px;
+      transform-origin: top left;
+    }
+
+    .type-group { margin-top: 4px; }
+
+    .type-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.3);
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      padding: 3px 20px 3px;
+    }
+
+    /* Text-only rows: quantity then name. No art, no mana pips — at sidebar
+       width a 28px thumbnail reads as noise, and the list is scanned, not
+       studied. Count leads because that's what a caster is looking for. */
+    .card-row {
+      display: flex;
+      align-items: baseline;
+      gap: 9px;
+      padding: 2px 16px 2px 12px;
+    }
+
+    .card-count {
+      font-size: 14px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.45);
+      min-width: 14px;
+      text-align: right;
+      flex-shrink: 0;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* A full playset — the cards that define the deck */
+    .card-count.max { color: #d4af37; }
+
+    .card-name {
+      flex: 1;
+      min-width: 0;
+      font-size: 14px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.9);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Unresolved rows */
+    .card-name.bad { color: rgba(255,100,100,0.75); }
+  </style>
+</head>
+<body>
+  <div id="panel">
+    <div class="panel-header" id="panel-header">
+      <div class="header-player" id="header-player">Player</div>
+      <div class="header-deck" id="header-deck"></div>
+      <div class="header-count" id="header-count"></div>
+    </div>
+    <div class="scroll-area" id="scroll-area"></div>
+  </div>
+
+  <script src="/overlays/ws.js"></script>
+  <script src="/overlays/mtg.js"></script>
+  <script>
+    const panel      = document.getElementById('panel')
+    const scrollArea = document.getElementById('scroll-area')
+    const panelHeader = document.getElementById('panel-header')
+
+    // Scale scroll-area content so all rows fit without scrolling
+    function fitContent() {
+      scrollArea.style.zoom = 1
+      const availH = panel.offsetHeight - panelHeader.offsetHeight
+      const naturalH = scrollArea.scrollHeight
+      if (naturalH > availH) {
+        scrollArea.style.zoom = availH / naturalH
+      }
+    }
+
+    function getActive(state) {
+      return state.matches?.[state.activeMatchIndex ?? 0] ?? null
+    }
+
+    // Decklists arrive from state already resolved (name, cost, type, image),
+    // so rendering is pure DOM work — no fetch, nothing to await, and nothing
+    // that can fail if the venue network drops mid-match.
+    function render(state) {
+      const activeIdx = state.overlay?.decklistActive ?? null
+
+      if (activeIdx === null) {
+        panel.classList.remove('visible')
+        return
+      }
+
+      panel.classList.add('visible')
+
+      const player = getActive(state)?.players?.[activeIdx]
+      if (!player) return
+
+      document.getElementById('header-player').textContent = player.name || 'TBD'
+      document.getElementById('header-deck').textContent   = player.deckName || ''
+
+      const deck = player.decklist
+      scrollArea.innerHTML = ''
+
+      if (!deck) {
+        document.getElementById('header-count').textContent = 'No decklist loaded'
+        return
+      }
+
+      const main = deck.main ?? []
+      const side = deck.side ?? []
+      const mainCount = main.reduce((n, c) => n + c.count, 0)
+      const sideCount = side.reduce((n, c) => n + c.count, 0)
+
+      document.getElementById('header-count').textContent =
+        `${mainCount} cards${sideCount ? ` · ${sideCount} sideboard` : ''}`
+
+      for (const [type, rows] of MTG.groupByType(main)) {
+        scrollArea.appendChild(buildGroup(type, rows))
+      }
+
+      if (side.length > 0) {
+        scrollArea.appendChild(buildGroup('Sideboard', side, { sideboard: true }))
+      }
+
+      const unresolved = deck.unresolved ?? []
+      if (unresolved.length > 0) {
+        const groupEl = document.createElement('div')
+        groupEl.className = 'type-group'
+        const label = document.createElement('div')
+        label.className = 'type-label'
+        label.textContent = `Unresolved (${unresolved.length})`
+        groupEl.appendChild(label)
+        for (const u of unresolved) {
+          const row = document.createElement('div')
+          row.className = 'card-row'
+
+          const count = document.createElement('div')
+          count.className = 'card-count'
+          count.textContent = u.count
+
+          const name = document.createElement('div')
+          name.className = 'card-name bad'
+          name.textContent = u.rawName
+
+          row.append(count, name)
+          groupEl.appendChild(row)
+        }
+        scrollArea.appendChild(groupEl)
+      }
+
+      fitContent()
+    }
+
+    function buildGroup(type, rows, { sideboard = false } = {}) {
+      const groupEl = document.createElement('div')
+      groupEl.className = 'type-group'
+
+      const label = document.createElement('div')
+      label.className = 'type-label'
+      const groupCount = rows.reduce((n, c) => n + c.count, 0)
+      label.textContent = sideboard
+        ? `Sideboard  (${groupCount})`
+        : `${MTG.plural(type, groupCount)}  (${groupCount})`
+      if (!sideboard) label.style.color = MTG.typeColor(type)
+      groupEl.appendChild(label)
+
+      // Highest count first, then by mana cost — how a player would read
+      // their own list: the 4-ofs that define the deck at the top.
+      const sorted = [...rows].sort((a, b) =>
+        b.count - a.count || (a.cmc ?? 0) - (b.cmc ?? 0) || a.name.localeCompare(b.name)
+      )
+      for (const row of sorted) groupEl.appendChild(buildRow(row))
+      return groupEl
+    }
+
+    function buildRow(card) {
+      const row = document.createElement('div')
+      row.className = 'card-row'
+
+      const count = document.createElement('div')
+      // 4 is a playset — the deck's core. Worth flagging, as the old build did.
+      count.className = `card-count${card.count >= 4 ? ' max' : ''}`
+      count.textContent = card.count
+
+      const name = document.createElement('div')
+      name.className = 'card-name'
+      name.textContent = card.name
+
+      row.append(count, name)
+      return row
+    }
+
+    connectOverlay(msg => { if (msg.type === 'state') render(msg.data) })
+  </script>
+</body>
+</html>

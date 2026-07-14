@@ -1,0 +1,19 @@
+# Normalise line endings in the repo, and check each file out with the endings
+# its platform actually needs.
+
+* text=auto
+
+# The Mac launcher MUST keep LF. A shell script checked out with CRLF fails on
+# macOS with "bad interpreter: /bin/bash^M" — the script is unrunnable, and the
+# error gives no hint that line endings are the cause.
+*.command text eol=lf
+*.sh      text eol=lf
+
+# The Windows launcher wants CRLF. cmd.exe tolerates LF in most cases but not
+# all, and there's no reason to risk it.
+*.bat     text eol=crlf
+
+# Binary — never touch.
+*.png     binary
+*.jpg     binary
+*.webp    binary

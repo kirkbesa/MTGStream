@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Panelists Overlay</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      background: transparent;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+
+    /* Full-width row: P1 anchored left, P2 anchored right */
+    #panelist-wrap {
+      position: absolute;
+      bottom: 40px;
+      left: 48px;
+      right: 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+
+    #panelist-wrap.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Individual panelist card — each fills half the wrapper */
+    .panelist-card {
+      width: calc(50% - 24px);
+      background: rgba(10, 10, 10, 0.88);
+      backdrop-filter: blur(10px);
+      border-top: 4px solid #0ea5e9;
+      border-radius: 10px;
+      padding: 18px 32px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: opacity 0.3s ease;
+    }
+
+    .panelist-card.hidden {
+      display: none;
+    }
+
+    .pn-role {
+      font-size: 12px;
+      font-weight: 800;
+      color: rgba(56,189,248,0.7);
+      text-transform: uppercase;
+      letter-spacing: 2.5px;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .pn-name {
+      font-size: 56px;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.05;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pn-meta {
+      font-size: 20px;
+      color: rgba(255,255,255,0.5);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 2px;
+    }
+  </style>
+</head>
+<body>
+  <div id="panelist-wrap">
+    <div class="panelist-card" id="pn-0">
+      <div class="pn-role">Panelist</div>
+      <div class="pn-name" id="pn-0-name"></div>
+      <div class="pn-meta" id="pn-0-meta"></div>
+    </div>
+    <div class="panelist-card" id="pn-1">
+      <div class="pn-role">Panelist</div>
+      <div class="pn-name" id="pn-1-name"></div>
+      <div class="pn-meta" id="pn-1-meta"></div>
+    </div>
+  </div>
+
+  <script src="/overlays/ws.js"></script>
+  <script>
+    const wrap = document.getElementById('panelist-wrap')
+
+    function render(state) {
+      const visible   = state.overlay?.panelistVisible ?? false
+      const panelists = state.panelists ?? []
+
+      if (!visible) {
+        wrap.classList.remove('visible')
+        return
+      }
+
+      for (let i = 0; i < 2; i++) {
+        const pn     = panelists[i] ?? {}
+        const nameEl = document.getElementById(`pn-${i}-name`)
+        const metaEl = document.getElementById(`pn-${i}-meta`)
+
+        nameEl.textContent = pn.name || ''
+
+        const parts = []
+        if (pn.handle)   parts.push(pn.handle.startsWith('@') ? pn.handle : '@' + pn.handle)
+        if (pn.pronouns) parts.push(pn.pronouns)
+        metaEl.textContent = parts.join('  ·  ')
+
+        const hasAny = !!(pn.name || pn.handle || pn.pronouns)
+        document.getElementById(`pn-${i}`).classList.toggle('hidden', !hasAny)
+      }
+
+      const anyVisible = (panelists[0]?.name || panelists[0]?.handle || panelists[0]?.pronouns ||
+                          panelists[1]?.name || panelists[1]?.handle || panelists[1]?.pronouns)
+      wrap.classList.toggle('visible', !!anyVisible)
+    }
+
+    connectOverlay(msg => { if (msg.type === 'state') render(msg.data) })
+  </script>
+</body>
+</html>

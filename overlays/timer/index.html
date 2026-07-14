@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Timer Overlay</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      background: transparent;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+
+    /* Wrapper — centered horizontally near the top */
+    #timer-wrap {
+      position: absolute;
+      top: 36px;
+      left: 50%;
+      transform: translateX(-50%);
+      opacity: 0;
+      transition: opacity 0.35s ease;
+      white-space: nowrap;
+    }
+
+    #timer-wrap.visible {
+      opacity: 1;
+    }
+
+    /* Dark pill — same language as deckreveal badges */
+    .timer-pill {
+      background: rgba(6, 6, 6, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      border-radius: 16px;
+      padding: 12px 44px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      min-width: 240px;
+    }
+
+    /* Small dim label above the digits */
+    .timer-label {
+      font-size: 11px;
+      font-weight: 800;
+      color: rgba(255, 255, 255, 0.35);
+      text-transform: uppercase;
+      letter-spacing: 2.5px;
+      line-height: 1;
+    }
+
+    /* Main time display */
+    .timer-digits {
+      font-size: 80px;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1;
+      letter-spacing: -3px;
+      font-variant-numeric: tabular-nums;
+      /* smooth color transitions for warning/critical */
+      transition: color 0.5s ease, letter-spacing 0.2s ease, font-size 0.2s ease;
+    }
+
+    /* Colour states for countdown */
+    .timer-digits.warning  { color: #f97316; }
+    .timer-digits.critical { color: #ef4444; }
+
+    /* TURNS state — slightly smaller, spaced-out, red */
+    .timer-digits.turns {
+      font-size: 68px;
+      letter-spacing: 6px;
+      color: #ef4444;
+    }
+  </style>
+</head>
+<body>
+  <div id="timer-wrap">
+    <div class="timer-pill">
+      <div class="timer-label" id="timer-label">Round Timer</div>
+      <div class="timer-digits" id="timer-digits">35:00</div>
+    </div>
+  </div>
+
+  <script src="/overlays/ws.js"></script>
+  <script>
+    const wrap   = document.getElementById('timer-wrap')
+    const digits = document.getElementById('timer-digits')
+    const label  = document.getElementById('timer-label')
+
+    let timerState  = null
+    let matchFormat = 'swiss'
+    let tickId      = null   // setInterval handle — only live while timer is running
+
+    /* ── Formatting helpers ──────────────────────────────────── */
+    function pad2(n) { return String(Math.floor(Math.abs(n))).padStart(2, '0') }
+
+    function fmtCountdown(secs) {
+      const s = Math.max(0, secs)
+      return `${pad2(s / 60)}:${pad2(s % 60)}`
+    }
+
+    function fmtCountup(secs) {
+      const s = Math.max(0, secs)
+      const h = Math.floor(s / 3600)
+      const m = Math.floor((s % 3600) / 60)
+      const ss = s % 60
+      return h > 0 ? `${pad2(h)}:${pad2(m)}:${pad2(ss)}` : `${pad2(m)}:${pad2(ss)}`
+    }
+
+    /* ── Single render pass (no loop overhead) ───────────────── */
+    function render() {
+      if (!timerState) return
+      const { duration, running, startedAt, accumulated } = timerState
+      const live = (running && startedAt) ? (Date.now() - startedAt) / 1000 : 0
+
+      if (matchFormat === 'swiss') {
+        const remaining = Math.ceil(duration - accumulated - live)
+        if (remaining <= 0) {
+          digits.textContent = 'TURNS'
+          digits.className   = 'timer-digits turns'
+          label.textContent  = 'In Turns'
+        } else {
+          digits.textContent = fmtCountdown(remaining)
+          digits.className   = remaining <= 60  ? 'timer-digits critical'
+                             : remaining <= 180 ? 'timer-digits warning'
+                             :                    'timer-digits'
+          label.textContent  = 'Round Timer'
+        }
+      } else {
+        digits.textContent = fmtCountup(Math.floor(accumulated + live))
+        digits.className   = 'timer-digits'
+        label.textContent  = 'Match Timer'
+      }
+    }
+
+    /* ── Tick loop — only active while timer is running ─────── */
+    function startTick() {
+      if (tickId !== null) return          // already running
+      tickId = setInterval(render, 250)
+    }
+
+    function stopTick() {
+      if (tickId === null) return
+      clearInterval(tickId)
+      tickId = null
+    }
+
+    /* ── State handler ───────────────────────────────────────── */
+    function getActive(state) {
+      return state.matches?.[state.activeMatchIndex ?? 0] ?? null
+    }
+
+    function onState(state) {
+      const active = getActive(state)
+      timerState  = active?.timer ?? null
+      matchFormat = active?.match?.format ?? 'swiss'
+      wrap.classList.toggle('visible', state.overlay?.timerVisible ?? false)
+
+      // Render immediately so display snaps to new state on every WS update
+      render()
+
+      // Only keep an interval alive while the clock is actually ticking
+      if (timerState?.running) startTick()
+      else stopTick()
+    }
+
+    /* ── WebSocket ───────────────────────────────────────────── */
+    connectOverlay(msg => { if (msg.type === 'state') onState(msg.data) })
+  </script>
+</body>
+</html>

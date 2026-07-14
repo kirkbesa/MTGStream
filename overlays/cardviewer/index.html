@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Card Viewer Overlay</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      background: transparent;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+
+    #viewer {
+      position: absolute;
+      bottom: 160px;
+      right: 80px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      opacity: 0;
+      transform: translateY(20px) scale(0.95);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+      pointer-events: none;
+    }
+
+    #viewer.visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    /* Card image */
+    #card-image {
+      width: 280px;
+      border-radius: 12px;
+      display: block;
+      box-shadow: 0 12px 48px rgba(0,0,0,0.75), 0 0 0 1px rgba(255,255,255,0.07);
+    }
+
+    #card-image.hidden { display: none; }
+
+    /* Placeholder — no emoji, just a styled box */
+    #card-placeholder {
+      width: 280px;
+      height: 392px;   /* ~5:7 ratio */
+      border-radius: 12px;
+      background: rgba(20,20,20,0.88);
+      border: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #card-placeholder.hidden { display: none; }
+
+    .placeholder-inner {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: rgba(124,58,237,0.15);
+      border: 2px solid rgba(124,58,237,0.3);
+    }
+
+    /* Card info pill — matches the dark-pill language across all overlays */
+    #card-info {
+      background: rgba(6,6,6,0.92);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-top: 3px solid #7c3aed;
+      border-radius: 10px;
+      padding: 10px 18px 12px;
+      text-align: center;
+      width: 280px;
+    }
+
+    /* Name and mana cost share a row, as they do on a real card frame:
+       name left, cost right, cost never squeezed out by a long name. */
+    .name-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    #card-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.2;
+      text-align: left;
+    }
+
+    #card-mana {
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    #card-meta {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 8px;
+      margin-top: 5px;
+    }
+
+    #card-type {
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.45);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <div id="viewer">
+    <img id="card-image" class="hidden" alt="" />
+    <div id="card-placeholder">
+      <div class="placeholder-inner"></div>
+    </div>
+    <div id="card-info">
+      <div class="name-row">
+        <div id="card-name">—</div>
+        <div id="card-mana"></div>
+      </div>
+      <div id="card-meta">
+        <div id="card-type">—</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/overlays/ws.js"></script>
+  <script src="/overlays/mtg.js"></script>
+  <script>
+    const viewer      = document.getElementById('viewer')
+    const cardImage   = document.getElementById('card-image')
+    const placeholder = document.getElementById('card-placeholder')
+    const cardName    = document.getElementById('card-name')
+    const cardType    = document.getElementById('card-type')
+    const cardMana    = document.getElementById('card-mana')
+    const cardInfo    = document.getElementById('card-info')
+
+    let currentIdentifier = null
+
+    async function showCard(identifier) {
+      if (identifier === currentIdentifier) return
+      currentIdentifier = identifier
+
+      if (!identifier) {
+        viewer.classList.remove('visible')
+        return
+      }
+
+      try {
+        const res  = await fetch(`/api/cards/${identifier}`)
+        if (!res.ok) throw new Error('not found')
+        const card = await res.json()
+
+        cardName.textContent = card.name || identifier
+
+        // Full type line straight from Scryfall — "Creature — Goblin Warrior"
+        // says more than a bare primary type, and it's what's printed on the card.
+        cardType.textContent = card.typeLine || card.type || ''
+        cardType.style.color = MTG.typeColor(card.type)
+
+        // Mana cost as real pips
+        cardMana.innerHTML = ''
+        cardMana.appendChild(MTG.manaPips(card.manaCost, 15))
+
+        cardInfo.style.borderTopColor = MTG.colorOf(card)
+
+        if (card.imageUrl) {
+          cardImage.src    = card.imageUrl
+          cardImage.onload = () => {
+            cardImage.classList.remove('hidden')
+            placeholder.classList.add('hidden')
+          }
+          cardImage.onerror = () => {
+            cardImage.classList.add('hidden')
+            placeholder.classList.remove('hidden')
+          }
+        } else {
+          cardImage.classList.add('hidden')
+          placeholder.classList.remove('hidden')
+        }
+      } catch {
+        cardName.textContent = identifier
+        cardType.textContent = ''
+        cardMana.innerHTML   = ''
+        cardInfo.style.borderTopColor = MTG.COLORS.Colorless
+        cardImage.classList.add('hidden')
+        placeholder.classList.remove('hidden')
+      }
+
+      viewer.classList.add('visible')
+    }
+
+    function render(state) {
+      const id = state.overlay?.cardZoom ?? null
+      if (!id) {
+        viewer.classList.remove('visible')
+        currentIdentifier = null
+      } else {
+        showCard(id)
+      }
+    }
+
+    connectOverlay(msg => { if (msg.type === 'state') render(msg.data) })
+  </script>
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Broadcaster Overlay</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      background: transparent;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+
+    /* Full-width row: B1 anchored left, B2 anchored right */
+    #broadcaster-wrap {
+      position: absolute;
+      bottom: 40px;
+      left: 48px;
+      right: 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+
+    #broadcaster-wrap.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Individual broadcaster card — each fills half the wrapper */
+    .broadcaster-card {
+      width: calc(50% - 24px);
+      background: rgba(10, 10, 10, 0.88);
+      backdrop-filter: blur(10px);
+      border-top: 4px solid #7c3aed;
+      border-radius: 10px;
+      padding: 18px 32px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: opacity 0.3s ease;
+    }
+
+    .broadcaster-card.hidden {
+      display: none;
+    }
+
+    /* Small role label */
+    .bc-role {
+      font-size: 12px;
+      font-weight: 800;
+      color: rgba(167,139,250,0.7);
+      text-transform: uppercase;
+      letter-spacing: 2.5px;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    /* Name */
+    .bc-name {
+      font-size: 56px;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.05;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Handle + pronouns */
+    .bc-meta {
+      font-size: 20px;
+      color: rgba(255,255,255,0.5);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 2px;
+    }
+  </style>
+</head>
+<body>
+  <div id="broadcaster-wrap">
+    <div class="broadcaster-card" id="bc-0">
+      <div class="bc-role">Commentator</div>
+      <div class="bc-name" id="bc-0-name"></div>
+      <div class="bc-meta" id="bc-0-meta"></div>
+    </div>
+    <div class="broadcaster-card" id="bc-1">
+      <div class="bc-role">Commentator</div>
+      <div class="bc-name" id="bc-1-name"></div>
+      <div class="bc-meta" id="bc-1-meta"></div>
+    </div>
+  </div>
+
+  <script src="/overlays/ws.js"></script>
+  <script>
+    const wrap = document.getElementById('broadcaster-wrap')
+
+    function render(state) {
+      const visible      = state.overlay?.broadcasterVisible ?? false
+      const broadcasters = state.broadcasters ?? []
+
+      if (!visible) {
+        wrap.classList.remove('visible')
+        return
+      }
+
+      // Populate cards — always show both when the overlay is toggled on
+      for (let i = 0; i < 2; i++) {
+        const bc     = broadcasters[i] ?? {}
+        const nameEl = document.getElementById(`bc-${i}-name`)
+        const metaEl = document.getElementById(`bc-${i}-meta`)
+
+        nameEl.textContent = bc.name || ''
+
+        const parts = []
+        if (bc.handle)   parts.push(bc.handle.startsWith('@') ? bc.handle : '@' + bc.handle)
+        if (bc.pronouns) parts.push(bc.pronouns)
+        metaEl.textContent = parts.join('  ·  ')
+
+        // Hide individual card only when that broadcaster has zero data at all
+        const hasAny = !!(bc.name || bc.handle || bc.pronouns)
+        document.getElementById(`bc-${i}`).classList.toggle('hidden', !hasAny)
+      }
+
+      // Show overlay as long as at least one broadcaster card is visible
+      const anyVisible = (broadcasters[0]?.name || broadcasters[0]?.handle || broadcasters[0]?.pronouns ||
+                          broadcasters[1]?.name || broadcasters[1]?.handle || broadcasters[1]?.pronouns)
+      wrap.classList.toggle('visible', !!anyVisible)
+    }
+
+    connectOverlay(msg => { if (msg.type === 'state') render(msg.data) })
+  </script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+[
+  {
+    "name": "Plachy",
+    "deck": "Jund Wildfire",
+    "decklist": "4 Writhing Chrysalis\n4 Kuldotha Rebirth\n4 Galvanic Blast\n2 Chain Lightning\n19 Mountain",
+    "sideboard": "2 Gorilla Shaman\n3 Duress\n2 Pyroblast"
+  },
+  {
+    "name": "Favetta",
+    "deck": "White Weenie",
+    "mainboard": [
+      { "count": 4, "name": "Thraben Charm" },
+      { "count": 4, "name": "Guardians' Pledge" },
+      { "count": 20, "name": "Plains" }
+    ],
+    "sideboard": [
+      { "count": 2, "name": "Dust to Dust" },
+      { "count": 3, "name": "Standard Bearer" }
+    ]
+  },
+  {
+    "name": "Rossi",
+    "deck": "Familiars",
+    "mainboard": [
+      "4 Sea Gate Oracle",
+      "4 Snap",
+      "4 Preordain",
+      "17 Island"
+    ],
+    "sideboard": [
+      "2 Hydroblast",
+      "2 Dispel"
+    ]
+  }
+]

@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Top 8 Bracket</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    width: 1920px; height: 1080px;
+    background: transparent;
+    overflow: hidden;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  }
+
+  #bracket-root {
+    position: absolute;
+    inset: 0;
+    display: none;
+  }
+
+  /* ── SVG connectors ─────────────────────────────────────── */
+  #connector-svg {
+    position: absolute;
+    inset: 0;
+    width: 1920px;
+    height: 1080px;
+    pointer-events: none;
+  }
+
+  /* ── Match group ────────────────────────────────────────── */
+  .match-group {
+    position: absolute;
+    width: 360px;
+  }
+
+  /* ── Player box — horizontal flex row ──────────────────── */
+  .pbox {
+    width: 360px;
+    height: 90px;
+    padding: 0 12px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    border-radius: 6px;
+    transition: background 0.35s ease, border-color 0.35s ease, opacity 0.35s ease;
+    overflow: hidden;
+  }
+
+  .pbox--pending {
+    background: rgba(14, 14, 22, 0.82);
+    border: 1px solid rgba(255,255,255,0.18);
+  }
+  .pbox--winner {
+    background: rgba(245, 243, 255, 0.92);
+    border: 1px solid rgba(255,255,255,0.6);
+  }
+  .pbox--loser {
+    background: rgba(6, 6, 10, 0.88);
+    border: 1px solid rgba(255,255,255,0.06);
+    opacity: 0.38;
+  }
+  .pbox--empty {
+    background: rgba(14, 14, 22, 0.65);
+    border: 1px solid rgba(255,255,255,0.22);
+  }
+
+  /* ── Seed — left column ─────────────────────────────────── */
+  .pbox-seed {
+    width: 26px;
+    flex-shrink: 0;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: rgba(167,139,250,0.85);
+    letter-spacing: 0.04em;
+    line-height: 1;
+  }
+
+  /* ── Main area — name + record row, deck below ──────────── */
+  .pbox-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+  }
+
+  /* Name and record on same line */
+  .pbox-name-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .pbox-name {
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    color: rgba(255,255,255,0.95);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1;
+    text-shadow: 0 1px 5px rgba(0,0,0,0.8);
+    flex-shrink: 1;
+    min-width: 0;
+  }
+
+  .pbox-record {
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.42);
+    flex-shrink: 0;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .pbox-deck {
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(167,139,250,0.75);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1;
+  }
+
+  /* ── Score badge — right column ─────────────────────────── */
+  .pbox-score {
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    font-size: 22px;
+    font-weight: 800;
+    color: rgba(255,255,255,0.88);
+    line-height: 1;
+    transition: opacity 0.25s;
+  }
+  .pbox-score--hidden { visibility: hidden; }
+
+  /* ── Winner overrides — dark text on light bg ───────────── */
+  .pbox--winner .pbox-seed   { color: rgba(109,40,217,0.7); }
+  .pbox--winner .pbox-record { color: rgba(0,0,0,0.4); }
+  .pbox--winner .pbox-name   { color: rgba(15,10,30,0.95); text-shadow: none; }
+  .pbox--winner .pbox-deck   { color: rgba(109,40,217,0.65); }
+  .pbox--winner .pbox-score  {
+    background: rgba(109,40,217,0.1);
+    border-color: rgba(109,40,217,0.3);
+    color: rgba(109,40,217,0.85);
+  }
+
+  /* ── Loser overrides ────────────────────────────────────── */
+  .pbox--loser .pbox-score   { opacity: 0.35; }
+
+  /* ── Empty box ───────────────────────────────────────────── */
+  .pbox--empty .pbox-seed   { visibility: hidden; }
+  .pbox--empty .pbox-record { visibility: hidden; }
+  .pbox--empty .pbox-deck   { display: none; }
+  .pbox--empty .pbox-score  { visibility: hidden; }
+  .pbox--empty .pbox-name {
+    color: rgba(255,255,255,0.28);
+    font-size: 16px;
+    font-weight: 500;
+    text-shadow: none;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  /* ── Match divider ────────────────────────────────────────── */
+  .match-divider {
+    height: 3px;
+    background: rgba(255,255,255,0.08);
+  }
+
+  /* ── Champion box ────────────────────────────────────────── */
+  #box-champion { width: 260px; }
+
+  .pbox--champion {
+    background: linear-gradient(135deg, rgba(250,204,21,0.22), rgba(250,204,21,0.08));
+    border: 1px solid rgba(250,204,21,0.5);
+    box-shadow: 0 0 28px rgba(250,204,21,0.18);
+  }
+  .pbox--champion .pbox-seed   { color: rgba(250,204,21,0.85); }
+  .pbox--champion .pbox-record { color: rgba(255,255,255,0.45); }
+  .pbox--champion .pbox-name   {
+    color: rgba(255,255,255,0.98);
+    text-shadow: 0 0 20px rgba(250,204,21,0.45), 0 1px 5px rgba(0,0,0,0.8);
+  }
+  .pbox--champion .pbox-deck   { color: rgba(250,204,21,0.72); }
+</style>
+</head>
+<body>
+
+<div id="bracket-root">
+
+  <!--
+    Layout (box=90px, divider=3px, match=183px, gap=32px):
+      QF x:340  SF x:780  F x:1220
+      QF right:700  SF right:1140
+      QF→SF connector x:740   SF→F connector x:1180
+
+      QF tops:  126  341  556  771
+      QF ctrs:  217.5  432.5  647.5  862.5
+      SF0 ctr:325 top:234   SF1 ctr:755 top:664
+      F   ctr:540 top:449  (exact vertical center)
+      Champion: top=495 (ctr=540)
+  -->
+
+  <svg id="connector-svg" xmlns="http://www.w3.org/2000/svg">
+    <g stroke="rgba(255,255,255,0.28)" stroke-width="2.5" fill="none" stroke-linecap="round">
+      <line x1="700" y1="217.5" x2="740" y2="217.5"/>
+      <line x1="700" y1="432.5" x2="740" y2="432.5"/>
+      <line x1="740" y1="217.5" x2="740" y2="432.5"/>
+      <line x1="740" y1="325"   x2="780" y2="325"/>
+
+      <line x1="700" y1="647.5" x2="740" y2="647.5"/>
+      <line x1="700" y1="862.5" x2="740" y2="862.5"/>
+      <line x1="740" y1="647.5" x2="740" y2="862.5"/>
+      <line x1="740" y1="755"   x2="780" y2="755"/>
+
+      <line x1="1140" y1="325"  x2="1180" y2="325"/>
+      <line x1="1140" y1="755"  x2="1180" y2="755"/>
+      <line x1="1180" y1="325"  x2="1180" y2="755"/>
+      <line x1="1180" y1="540"  x2="1220" y2="540"/>
+
+      <!-- Finals → Champion -->
+      <line x1="1580" y1="540"  x2="1640" y2="540"/>
+    </g>
+  </svg>
+
+  <!-- ── Round labels ────────────────────────────────────── -->
+  <div style="position:absolute; left:340px; top:966px; width:360px; text-align:center;
+              font-size:13px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase;
+              color:rgba(255,255,255,0.4); text-shadow:0 1px 4px rgba(0,0,0,0.7);">
+    Quarterfinals
+  </div>
+  <div style="position:absolute; left:780px; top:859px; width:360px; text-align:center;
+              font-size:13px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase;
+              color:rgba(255,255,255,0.4); text-shadow:0 1px 4px rgba(0,0,0,0.7);">
+    Semifinals
+  </div>
+  <div style="position:absolute; left:1220px; top:644px; width:360px; text-align:center;
+              font-size:13px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase;
+              color:rgba(255,255,255,0.4); text-shadow:0 1px 4px rgba(0,0,0,0.7);">
+    Finals
+  </div>
+  <div style="position:absolute; left:1640px; top:597px; width:260px; text-align:center;
+              font-size:13px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase;
+              color:rgba(250,204,21,0.55); text-shadow:0 1px 4px rgba(0,0,0,0.7);">
+    Champion
+  </div>
+
+  <!-- ── QF column ───────────────────────────────────────── -->
+
+  <!-- QF0: 1 vs 8  |  top=126 -->
+  <div class="match-group" id="mg-r0-m0" style="left:340px; top:126px">
+    <div class="pbox pbox--empty" id="box-r0-m0-a">
+      <span class="pbox-seed" id="seed-r0-m0-a"></span>
+      <div class="pbox-main">
+        <div class="pbox-name-row">
+          <span class="pbox-name" id="name-r0-m0-a">TBD</span>
+          <span class="pbox-record" id="rec-r0-m0-a"></span>
+        </div>
+        <span class="pbox-deck" id="deck-r0-m0-a"></span>
+      </div>
+      <div class="pbox-score pbox-score--hidden" id="score-r0-m0-a">0</div>
+    </div>
+    <div class="match-divider"></div>
+    <div class="pbox pbox--empty" id="box-r0-m0-b">
+      <span class="pbox-seed" id="seed-r0-m0-b"></span>
+      <div class="pbox-main">
+        <div class="pbox-name-row">
+          <span class="pbox-name" id="name-r0-m0-b">TBD</span>
+          <span class="pbox-record" id="rec-r0-m0-b"></span>
+        </div>
+        <span class="pbox-deck" id="deck-r0-m0-b"></span>
+      </div>
+      <div class="pbox-score pbox-score--hidden" id="score-r0-m0-b">0</div>
+    </div>
+  </div>
+
+  <!-- QF1: 4 vs 5  |  top=341 -->
+  <div class="match-group" id="mg-r0-m1" style="left:340px; top:341px">
+    <div class="pbox pbox--empty" id="box-r0-m1-a">
+      <span class="pbox-seed" id="seed-r0-m1-a"></span>
+      <div class="pbox-main">
+        <div class="pbox-name-row">
+          <span class="pbox-name" id="name-r0-m1-a">TBD</span>
+          <span class="pbox-record" id="rec-r0-m1-a"></span>
+        </div>
+        <span class="pbox-deck" id="deck-r0-m1-a"></span>
+      </div>
+      <div class="pbox-score pbox-score--hidden" id="score-r0-m1-a">0</div>
+    </div>
+    <div class="match-divider"></div>
+    <div class="pbox pbox--empty" id="box-r0-m1-b">
+      <span class="pbox-seed" id="seed-r0-m1-b"></span>
+      <div class="pbox-main">
+        <div class="pbox-name-row">
+          <span class="pbox-name" id="name-r0-m1-b">TBD</span>
+          <span class="pbox-record" id="rec-r0-m1-b"></span>
+        </div>
+        <span class="pbox-deck" id="deck-r0-m1-b"></span>
+      </div>
+      <div class="pbox-score pbox-score--hidden" id="score-r0-m1-b">0</div>
+    </div>
+  </div>
+
+  <!-- QF2: 3 vs 6  |  top=556 -->
+  <div class="match-group" id="mg-r0-m2" style="left:340px; top:556px">
+    <div class="pbox pbox--empty" id="box-r0-m2-a">
+      <span class="pbox-seed" id="seed-r0-m2-a"></span>
+      <div class="pbox-main">
+        <div class="pbox-name-row">
+          <span class="pbox-name" id="name-r0-m2-a">TBD</span>
+          <span class="pbox-record" id="rec-r0-m2-a"></span>
+        </div>
+        <span class="pbox-deck" id="deck-r0-m2-a"></span>
+      </div>
+      <div class="pbox-score pbox-score--hidden" id="score-r0-m2-a">0</div>
+    </div>
+    <div class="match-divider"></div>
+    <div class="pbox pbox--empty" id="box-r0-m2-b">
+      <span class="pbox-seed" id="seed-r0-m2-b"></span>
+      <div class="pbox-main">
+        <div class="pbox-name-row">
+          <span class="pbox-name" id="name-r0-m2-b">TBD</span>
+          <span class="pbox-record" id="rec-r0-m2-b"></span>
+        </div>
+        <span class="pbox-deck" id="deck-r0-m2-b"></span>
+      </div>
+      <div class="pbox-score pbox-score--hidden" id="score-r0-m2-b">0</div>
+    </div>
+  </div>
+
+  <!-- QF3: 2 vs 7  |  top=771 -->
+  <div class="match-group" id="mg-r0-m3" style="left:340px; top:771px">
+    <div class="pbox pbox--empty" id="box-r0-m3-a">
+      <span class="pbox-seed" id="seed-r0-m3-a"></span>
+      <div class="pbox-main">
+        <div class="pbox-name-row">
+          <span class="pbox-name" id="name-r0-m3-a">TBD</span>
+          <span class="pbox-record" id="rec-r0-m3-a"></span>
+        </div>
+        <span class="pbox-deck" id="deck-r0-m3-a"></span>
+      </div>
+      <div class="pbox-score pbox-score--hidden" id="score-r0-m3-a">0</div>
+    </div>
+    <div class="match-divider"></div>
+    <div class="pbox pbox--empty" id="box-r0-m3-b">
+      <span class="pbox-seed" id="seed-r0-m3-b"></span>
+      <div class="pbox-main">
+        <div class="pbox-name-row">
+          <span class="pbox-name" id="name-r0-m3-b">TBD</span>
+          <span class="pbox-record" id="rec-r0-m3-b"></span>
+        </div>
+        <span class="pbox-deck" id="deck-r0-m3-b"></span>
+      </div>
+      <div class="pbox-score pbox-score--hidden" id="score-r0-m3-b">0</div>
+    </div>
+  </div>
+
+  <!-- ── SF column ───────────────────────────────────────── -->
+
+  <!-- SF0: W(QF0) vs W(QF1)  |  top=234 -->
+  <div class="match-group" id="mg-r1-m0" style="left:780px; top:234px">
+    <div class="pbox pbox--empty" id="box-r1-m0-a">
+      <span class="pbox-seed" id="seed-r1-m0-a"></span>
+      <div class="pbox-main">
+        <div class="pbox-name-row">
+          <span class="pbox-name" id="name-r1-m0-a">TBD</span>
+          <span class="pbox-record" id="rec-r1-m0-a"></span>
+        </div>
+        <span class="pbox-deck" id="deck-r1-m0-a"></span>
+      </div>
+      <div class="pbox-score pbox-score--hidden" id="score-r1-m0-a">0</div>
+    </div>
+    <div class="match-divider"></div>
+    <div class="pbox pbox--empty" id="box-r1-m0-b">
+      <span class="pbox-seed" id="seed-r1-m0-b"></span>
+      <div class="pbox-main">
+        <div class="pbox-name-row">
+          <span class="pbox-name" id="name-r1-m0-b">TBD</span>
+          <span class="pbox-record" id="rec-r1-m0-b"></span>
+        </div>
+        <span class="pbox-deck" id="deck-r1-m0-b"></span>
+      </div>
+      <div class="pbox-score pbox-score--hidden" id="score-r1-m0-b">0</div>
+    </div>
+  </div>
+
+  <!-- SF1: W(QF2) vs W(QF3)  |  top=664 -->
+  <div class="match-group" id="mg-r1-m1" style="left:780px; top:664px">
+    <div class="pbox pbox--empty" id="box-r1-m1-a">
+      <span class="pbox-seed" id="seed-r1-m1-a"></span>
+      <div class="pbox-main">
+        <div class="pbox-name-row">
+          <span class="pbox-name" id="name-r1-m1-a">TBD</span>
+          <span class="pbox-record" id="rec-r1-m1-a"></span>
+        </div>
+        <span class="pbox-deck" id="deck-r1-m1-a"></span>
+      </div>
+      <div class="pbox-score pbox-score--hidden" id="score-r1-m1-a">0</div>
+    </div>
+    <div class="match-divider"></div>
+    <div class="pbox pbox--empty" id="box-r1-m1-b">
+      <span class="pbox-seed" id="seed-r1-m1-b"></span>
+      <div class="pbox-main">
+        <div class="pbox-name-row">
+          <span class="pbox-name" id="name-r1-m1-b">TBD</span>
+          <span class="pbox-record" id="rec-r1-m1-b"></span>
+        </div>
+        <span class="pbox-deck" id="deck-r1-m1-b"></span>
+      </div>
+      <div class="pbox-score pbox-score--hidden" id="score-r1-m1-b">0</div>
+    </div>
+  </div>
+
+  <!-- ── Final column ─────────────────────────────────────── -->
+
+  <!-- Champion: winner of the Final  |  top=495 (ctr=540) -->
+  <div class="pbox pbox--empty" id="box-champion" style="position:absolute; left:1640px; top:495px;">
+    <span class="pbox-seed" id="seed-champion"></span>
+    <div class="pbox-main">
+      <div class="pbox-name-row">
+        <span class="pbox-name" id="name-champion">TBD</span>
+        <span class="pbox-record" id="rec-champion"></span>
+      </div>
+      <span class="pbox-deck" id="deck-champion"></span>
+    </div>
+  </div>
+
+  <!-- Final: W(SF0) vs W(SF1)  |  top=449 (ctr=540) -->
+  <div class="match-group" id="mg-r2-m0" style="left:1220px; top:449px">
+    <div class="pbox pbox--empty" id="box-r2-m0-a">
+      <span class="pbox-seed" id="seed-r2-m0-a"></span>
+      <div class="pbox-main">
+        <div class="pbox-name-row">
+          <span class="pbox-name" id="name-r2-m0-a">TBD</span>
+          <span class="pbox-record" id="rec-r2-m0-a"></span>
+        </div>
+        <span class="pbox-deck" id="deck-r2-m0-a"></span>
+      </div>
+      <div class="pbox-score pbox-score--hidden" id="score-r2-m0-a">0</div>
+    </div>
+    <div class="match-divider"></div>
+    <div class="pbox pbox--empty" id="box-r2-m0-b">
+      <span class="pbox-seed" id="seed-r2-m0-b"></span>
+      <div class="pbox-main">
+        <div class="pbox-name-row">
+          <span class="pbox-name" id="name-r2-m0-b">TBD</span>
+          <span class="pbox-record" id="rec-r2-m0-b"></span>
+        </div>
+        <span class="pbox-deck" id="deck-r2-m0-b"></span>
+      </div>
+      <div class="pbox-score pbox-score--hidden" id="score-r2-m0-b">0</div>
+    </div>
+  </div>
+
+</div>
+
+<script src="/overlays/ws.js"></script>
+<script>
+  const root = document.getElementById('bracket-root')
+
+  connectOverlay(msg => { if (msg.type === 'state') render(msg.data.bracket) })
+
+  function render(bracket) {
+    if (!bracket) { root.style.display = 'none'; return }
+    root.style.display = bracket.active ? 'block' : 'none'
+
+    bracket.rounds.forEach((round, ri) => {
+      round.forEach((match, mi) => {
+        const sA = match.scoreA ?? 0
+        const sB = match.scoreB ?? 0
+        const showScore = sA + sB > 0
+        renderBox(ri, mi, 'a', match.a,
+          match.winner === 'a' ? 'winner' : match.winner === 'b' ? 'loser' : 'pending',
+          sA, showScore)
+        renderBox(ri, mi, 'b', match.b,
+          match.winner === 'b' ? 'winner' : match.winner === 'a' ? 'loser' : 'pending',
+          sB, showScore)
+      })
+    })
+
+    // Champion box — winner of rounds[2][0]
+    const finalMatch = bracket.rounds[2]?.[0]
+    const champ = finalMatch?.winner ? finalMatch[finalMatch.winner] : null
+    const champBox = document.getElementById('box-champion')
+    if (champBox) {
+      if (!champ) {
+        champBox.className = 'pbox pbox--empty'
+        document.getElementById('seed-champion').textContent = ''
+        document.getElementById('rec-champion').textContent  = ''
+        document.getElementById('name-champion').textContent = 'TBD'
+        document.getElementById('deck-champion').textContent = ''
+      } else {
+        champBox.className = 'pbox pbox--champion'
+        document.getElementById('seed-champion').textContent = `#${champ.seed}`
+        document.getElementById('rec-champion').textContent  = fmt(champ.record)
+        document.getElementById('name-champion').textContent = champ.name || '—'
+        document.getElementById('deck-champion').textContent = champ.deckName || ''
+      }
+    }
+  }
+
+  function fmt(r) {
+    if (!r) return ''
+    return `${r.w ?? 0}-${r.l ?? 0}${r.d ? '-' + r.d : ''}`
+  }
+
+  function renderBox(ri, mi, side, player, status, score, showScore) {
+    const box     = document.getElementById(`box-r${ri}-m${mi}-${side}`)
+    const seedEl  = document.getElementById(`seed-r${ri}-m${mi}-${side}`)
+    const recEl   = document.getElementById(`rec-r${ri}-m${mi}-${side}`)
+    const nameEl  = document.getElementById(`name-r${ri}-m${mi}-${side}`)
+    const deckEl  = document.getElementById(`deck-r${ri}-m${mi}-${side}`)
+    const scoreEl = document.getElementById(`score-r${ri}-m${mi}-${side}`)
+    if (!box) return
+
+    if (!player) {
+      box.className       = 'pbox pbox--empty'
+      seedEl.textContent  = ''
+      recEl.textContent   = ''
+      nameEl.textContent  = 'TBD'
+      deckEl.textContent  = ''
+      if (scoreEl) { scoreEl.textContent = '0'; scoreEl.classList.add('pbox-score--hidden') }
+      return
+    }
+
+    box.className      = `pbox pbox--${status}`
+    seedEl.textContent = `#${player.seed}`
+    recEl.textContent  = fmt(player.record)
+    nameEl.textContent = player.name || '—'
+    deckEl.textContent = player.deckName || ''
+    if (scoreEl) {
+      scoreEl.textContent = score
+      scoreEl.classList.toggle('pbox-score--hidden', !showScore)
+    }
+  }
+</script>
+</body>
+</html>

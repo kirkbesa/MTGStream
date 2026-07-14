@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+
+# Scryfall card + image cache.
+# Regenerates itself on first lookup, and is ~43 MB of art that has no business
+# in git. NOTE: this means a fresh clone starts with a COLD cache — import the
+# decklists before you go live, so the venue Wi-Fi dropping can't blank an
+# overlay mid-match.
+.cache/
+
+# Saved events and auto-saves. These are the record of a specific tournament —
+# real player names, real decklists — not source. They belong on the broadcast
+# machine, not in the repo.
+events/*.json
+autosave/
+
+# Written at runtime for OBS text sources; regenerated on every bracket change.
+OBS/*.txt
+
+# Real registration exports — actual player names and their decklists. Keep the
+# field out of the repo; the synthetic registration-template.* files next to it
+# document the format just as well, with made-up players.
+samples/*.csv
+samples/*.json
+!samples/registration-template.csv
+!samples/registration-template.json
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# NOT ignored, on purpose:
+#
+#   dist/control/   The BUILT control panel. start.bat / start.command run
+#                   `npm install --omit=dev` and then launch the server directly
+#                   — they never run a build, and the build tools aren't even
+#                   installed by --omit=dev. If dist/ is missing from a clone,
+#                   the server comes up with no control panel at all.
+#                   So: run `npm run build` and COMMIT the result after any
+#                   change under control/.
