@@ -14,12 +14,19 @@
       font-family: 'Segoe UI', system-ui, sans-serif;
     }
 
-    #panel {
+    /* One panel per player, each pinned to that player's side of the screen —
+       P1 left, P2 right, matching where they sit on the nameplate. They're
+       independent, so either, both, or neither can be on air; two lists side by
+       side is what a caster comparing decks actually wants.
+
+       Height follows the content: a fixed height leaves a slab of empty dark
+       panel under a short list. Growth stops at MAX_PANEL_H, past which the
+       content is zoom-scaled down to fit (see fitContent). */
+    .panel {
       position: absolute;
       top: 60px;
-      right: 60px;
       width: 400px;
-      height: 960px;
+      max-height: 960px;      /* keep in sync with MAX_PANEL_H below */
       background: rgba(10,10,10,0.88);
       backdrop-filter: blur(12px);
       border-radius: 12px;
@@ -28,11 +35,14 @@
       display: flex;
       flex-direction: column;
       opacity: 0;
-      transform: translateX(20px);
       transition: opacity 0.35s ease, transform 0.35s ease;
     }
 
-    #panel.visible {
+    /* Each slides in from its nearest edge. */
+    #panel-0 { left: 60px;  transform: translateX(-20px); }
+    #panel-1 { right: 60px; transform: translateX(20px); }
+
+    .panel.visible {
       opacity: 1;
       transform: translateX(0);
     }
@@ -64,10 +74,13 @@
       margin-top: 2px;
     }
 
-    /* No scrolling — content is zoom-scaled to fit */
+    /* No scrolling — content is zoom-scaled to fit.
+       `flex: none` (not `flex: 1`) so this contributes its natural height to the
+       panel: with flex-grow the panel would stretch to fill, which is exactly
+       the fixed-height look we're getting rid of. */
     .scroll-area {
       overflow: hidden;
-      flex: 1;
+      flex: none;
       padding: 8px 0 12px;
       transform-origin: top left;
     }
@@ -122,60 +135,92 @@
   </style>
 </head>
 <body>
-  <div id="panel">
-    <div class="panel-header" id="panel-header">
-      <div class="header-player" id="header-player">Player</div>
-      <div class="header-deck" id="header-deck"></div>
-      <div class="header-count" id="header-count"></div>
+  <div class="panel" id="panel-0">
+    <div class="panel-header" id="header-0">
+      <div class="header-player" id="header-player-0">Player</div>
+      <div class="header-deck"   id="header-deck-0"></div>
+      <div class="header-count"  id="header-count-0"></div>
     </div>
-    <div class="scroll-area" id="scroll-area"></div>
+    <div class="scroll-area" id="scroll-area-0"></div>
+  </div>
+
+  <div class="panel" id="panel-1">
+    <div class="panel-header" id="header-1">
+      <div class="header-player" id="header-player-1">Player</div>
+      <div class="header-deck"   id="header-deck-1"></div>
+      <div class="header-count"  id="header-count-1"></div>
+    </div>
+    <div class="scroll-area" id="scroll-area-1"></div>
   </div>
 
   <script src="/overlays/ws.js"></script>
   <script src="/overlays/mtg.js"></script>
   <script>
-    const panel      = document.getElementById('panel')
-    const scrollArea = document.getElementById('scroll-area')
-    const panelHeader = document.getElementById('panel-header')
+    // The panel's max-height in CSS. Measuring panel.offsetHeight instead would
+    // be circular now that the height follows the content — it'd report the
+    // content height we're trying to test against.
+    const MAX_PANEL_H = 960
 
-    // Scale scroll-area content so all rows fit without scrolling
-    function fitContent() {
+    function getActive(state) {
+      return state.matches?.[state.activeMatchIndex ?? 0] ?? null
+    }
+
+    // Which players' lists are up. An array — both can be on air at once. Older
+    // saves stored a single index, so tolerate that shape too.
+    function activeIndices(state) {
+      const v = state.overlay?.decklistActive
+      if (Array.isArray(v)) return v
+      if (Number.isFinite(v)) return [v]
+      return []
+    }
+
+    // Only scales down, and only when a list is too long to fit the cap. A
+    // normal 60+15 list renders at 1:1 and the panel simply ends where the
+    // cards end.
+    function fitContent(pi) {
+      const scrollArea = document.getElementById(`scroll-area-${pi}`)
+      const header     = document.getElementById(`header-${pi}`)
       scrollArea.style.zoom = 1
-      const availH = panel.offsetHeight - panelHeader.offsetHeight
+      const availH   = MAX_PANEL_H - header.offsetHeight
       const naturalH = scrollArea.scrollHeight
       if (naturalH > availH) {
         scrollArea.style.zoom = availH / naturalH
       }
     }
 
-    function getActive(state) {
-      return state.matches?.[state.activeMatchIndex ?? 0] ?? null
-    }
-
     // Decklists arrive from state already resolved (name, cost, type, image),
     // so rendering is pure DOM work — no fetch, nothing to await, and nothing
     // that can fail if the venue network drops mid-match.
     function render(state) {
-      const activeIdx = state.overlay?.decklistActive ?? null
+      const up = activeIndices(state)
 
-      if (activeIdx === null) {
-        panel.classList.remove('visible')
-        return
+      for (const pi of [0, 1]) {
+        const panel = document.getElementById(`panel-${pi}`)
+
+        if (!up.includes(pi)) {
+          panel.classList.remove('visible')
+          continue
+        }
+
+        const player = getActive(state)?.players?.[pi]
+        if (!player) { panel.classList.remove('visible'); continue }
+
+        panel.classList.add('visible')
+        renderPanel(pi, player)
       }
+    }
 
-      panel.classList.add('visible')
+    function renderPanel(pi, player) {
+      const scrollArea = document.getElementById(`scroll-area-${pi}`)
 
-      const player = getActive(state)?.players?.[activeIdx]
-      if (!player) return
-
-      document.getElementById('header-player').textContent = player.name || 'TBD'
-      document.getElementById('header-deck').textContent   = player.deckName || ''
+      document.getElementById(`header-player-${pi}`).textContent = player.name || 'TBD'
+      document.getElementById(`header-deck-${pi}`).textContent   = player.deckName || ''
 
       const deck = player.decklist
       scrollArea.innerHTML = ''
 
       if (!deck) {
-        document.getElementById('header-count').textContent = 'No decklist loaded'
+        document.getElementById(`header-count-${pi}`).textContent = 'No decklist loaded'
         return
       }
 
@@ -184,7 +229,7 @@
       const mainCount = main.reduce((n, c) => n + c.count, 0)
       const sideCount = side.reduce((n, c) => n + c.count, 0)
 
-      document.getElementById('header-count').textContent =
+      document.getElementById(`header-count-${pi}`).textContent =
         `${mainCount} cards${sideCount ? ` · ${sideCount} sideboard` : ''}`
 
       for (const [type, rows] of MTG.groupByType(main)) {
@@ -221,7 +266,7 @@
         scrollArea.appendChild(groupEl)
       }
 
-      fitContent()
+      fitContent(pi)
     }
 
     function buildGroup(type, rows, { sideboard = false } = {}) {

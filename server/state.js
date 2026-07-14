@@ -36,7 +36,10 @@ const defaultStandings = () =>
 const defaultOverlay = () => ({
   nameplateVisible: true,
   cardZoom: null,
-  decklistActive: null,
+  // Player indices whose decklist sidebar is up. An ARRAY, not a single index:
+  // P1's list renders on the left and P2's on the right, so both can be on air
+  // at once — which is what a caster comparing two lists actually wants.
+  decklistActive: [],
   deckRevealActive: null,
   standingsVisible: false,
   timerVisible: false,
@@ -148,7 +151,10 @@ function migrate(s) {
   if (!s.overlay) s.overlay = defaultOverlay()
   if (s.overlay.nameplateVisible  == null) s.overlay.nameplateVisible  = true
   if (s.overlay.cardZoom          === undefined) s.overlay.cardZoom    = null
-  if (s.overlay.decklistActive    === undefined) s.overlay.decklistActive   = null
+  // decklistActive used to be a single index (0 | 1 | null) before both lists
+  // could be up at once. Normalise an old save's value into the array form.
+  if (Number.isFinite(s.overlay.decklistActive))     s.overlay.decklistActive = [s.overlay.decklistActive]
+  else if (!Array.isArray(s.overlay.decklistActive)) s.overlay.decklistActive = []
   if (s.overlay.deckRevealActive  === undefined) s.overlay.deckRevealActive = null
   if (s.overlay.standingsVisible  == null) s.overlay.standingsVisible  = false
   if (s.overlay.timerVisible      == null) s.overlay.timerVisible      = false
@@ -369,7 +375,7 @@ export function setActiveMatchIndex(index) {
   if (index < 0 || index >= state.matches.length) return
   state.activeMatchIndex = index
   // Clear overlay match-references so they point to the new slot's players
-  state.overlay.decklistActive   = null
+  state.overlay.decklistActive   = []
   state.overlay.deckRevealActive = null
   state.overlay.cardZoom         = null
   broadcast()
@@ -495,9 +501,13 @@ export function seedBracketFromRoster() {
   writeObsFiles(state.bracket)
 }
 
+// `seed` is the player's placement going INTO the top 8 — what the overlay shows
+// as "#3". A slot typed in by hand has no seed, and the overlay renders no badge
+// for it rather than an empty one.
 const bracketSlot = (r) => ({
   name:     r.name     ?? '',
   deckName: r.deckName ?? '',
+  seed:     Number.isFinite(r.place) ? r.place : null,
 })
 
 // Fill the standings table from the roster's placements, best first. Only

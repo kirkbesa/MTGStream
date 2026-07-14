@@ -17,6 +17,20 @@
     position: absolute;
     inset: 0;
     display: none;
+
+    /* The layout below is authored in absolute coordinates that run
+     *   x: 340 → 1900   (QF column left edge → champion box right edge)
+     *   y: 126 → 984    (QF0 top → bottom of the "Quarterfinals" label)
+     * which leaves 340px of margin on the left and 20px on the right — visibly
+     * shoved to one side on a 1920x1080 canvas.
+     *
+     * Rather than re-number every box, connector line and label (and risk
+     * breaking the connector geometry, which is hand-computed to line up with
+     * the box centers), shift the whole thing as one unit:
+     *   x: content is 1560 wide → centered left margin is 180 → shift -160
+     *   y: content is  858 tall → centered top margin is 111 → shift  -15
+     */
+    transform: translate(-160px, -15px);
   }
 
   /* ── SVG connectors ─────────────────────────────────────── */
@@ -506,7 +520,7 @@
         document.getElementById('deck-champion').textContent = ''
       } else {
         champBox.className = 'pbox pbox--champion'
-        document.getElementById('seed-champion').textContent = `#${champ.seed}`
+        document.getElementById('seed-champion').textContent = seedLabel(champ.seed)
         document.getElementById('rec-champion').textContent  = fmt(champ.record)
         document.getElementById('name-champion').textContent = champ.name || '—'
         document.getElementById('deck-champion').textContent = champ.deckName || ''
@@ -517,6 +531,13 @@
   function fmt(r) {
     if (!r) return ''
     return `${r.w ?? 0}-${r.l ?? 0}${r.d ? '-' + r.d : ''}`
+  }
+
+  // A seed only exists for a player seeded from roster placements. Typing a name
+  // into a slot by hand is the manual fallback and carries no seed — so render
+  // nothing, rather than the literal "#undefined" this used to print.
+  function seedLabel(seed) {
+    return Number.isFinite(seed) ? `#${seed}` : ''
   }
 
   function renderBox(ri, mi, side, player, status, score, showScore) {
@@ -539,7 +560,7 @@
     }
 
     box.className      = `pbox pbox--${status}`
-    seedEl.textContent = `#${player.seed}`
+    seedEl.textContent = seedLabel(player.seed)
     recEl.textContent  = fmt(player.record)
     nameEl.textContent = player.name || '—'
     deckEl.textContent = player.deckName || ''

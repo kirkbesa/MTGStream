@@ -26,8 +26,15 @@ export default function Bracket({ state, editIndex }) {
     const found = roster.findIndex(p => (p.name ?? '').toLowerCase() === name.toLowerCase())
 
     m[side] = found >= 0
-      ? { name: roster[found].name, deckName: roster[found].deckName ?? '', rosterIndex: found }
-      : { ...(m[side] ?? {}), name, rosterIndex: undefined }
+      ? {
+          name:        roster[found].name,
+          deckName:    roster[found].deckName ?? '',
+          // Their placement is the seed the overlay shows as "#3". A roster with
+          // no placements yet gives null, and the overlay draws no badge.
+          seed:        Number.isFinite(roster[found].place) ? roster[found].place : null,
+          rosterIndex: found,
+        }
+      : { ...(m[side] ?? {}), name, seed: null, rosterIndex: undefined }
 
     commit(next)
   }

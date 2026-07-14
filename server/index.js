@@ -296,7 +296,7 @@ app.post('/api/state/matches/:mi/reset', (req, res) => {
   resetMatchAt(mi)
   // Clear match-specific overlay only when resetting the live slot
   if (mi === getState().activeMatchIndex) {
-    patchOverlay({ decklistActive: null, deckRevealActive: null, cardZoom: null })
+    patchOverlay({ decklistActive: [], deckRevealActive: null, cardZoom: null })
   }
   res.json(getLiveState())
 })
