@@ -1,0 +1,704 @@
+{
+    "name": "MTGStream",
+    "current_scene": "MTGStream",
+    "current_program_scene": "MTGStream",
+    "scene_order": [
+        {
+            "name": "MTGStream"
+        }
+    ],
+    "sources": [
+        {
+            "prev_ver": 503448577,
+            "mixers": 0,
+            "sync": 0,
+            "flags": 0,
+            "volume": 1,
+            "balance": 0.5,
+            "enabled": true,
+            "muted": false,
+            "push-to-mute": false,
+            "push-to-mute-delay": 0,
+            "push-to-talk": false,
+            "push-to-talk-delay": 0,
+            "hotkeys": {},
+            "deinterlace_mode": 0,
+            "deinterlace_field_order": 0,
+            "monitoring_type": 0,
+            "private_settings": {},
+            "name": "Nameplate",
+            "uuid": "ba142638-5e6f-4bfe-805d-54ac13e58f33",
+            "id": "browser_source",
+            "versioned_id": "browser_source",
+            "settings": {
+                "url": "http://localhost:3001/overlays/nameplate",
+                "width": 1920,
+                "height": 1080,
+                "fps_custom": false,
+                "fps": 30,
+                "reroute_audio": false,
+                "restart_when_active": false,
+                "shutdown": false,
+                "css": ""
+            }
+        },
+        {
+            "prev_ver": 503448577,
+            "mixers": 0,
+            "sync": 0,
+            "flags": 0,
+            "volume": 1,
+            "balance": 0.5,
+            "enabled": true,
+            "muted": false,
+            "push-to-mute": false,
+            "push-to-mute-delay": 0,
+            "push-to-talk": false,
+            "push-to-talk-delay": 0,
+            "hotkeys": {},
+            "deinterlace_mode": 0,
+            "deinterlace_field_order": 0,
+            "monitoring_type": 0,
+            "private_settings": {},
+            "name": "Card Viewer",
+            "uuid": "07c48f96-f231-4548-bd38-87c6b9b6ef38",
+            "id": "browser_source",
+            "versioned_id": "browser_source",
+            "settings": {
+                "url": "http://localhost:3001/overlays/cardviewer",
+                "width": 1920,
+                "height": 1080,
+                "fps_custom": false,
+                "fps": 30,
+                "reroute_audio": false,
+                "restart_when_active": false,
+                "shutdown": false,
+                "css": ""
+            }
+        },
+        {
+            "prev_ver": 503448577,
+            "mixers": 0,
+            "sync": 0,
+            "flags": 0,
+            "volume": 1,
+            "balance": 0.5,
+            "enabled": true,
+            "muted": false,
+            "push-to-mute": false,
+            "push-to-mute-delay": 0,
+            "push-to-talk": false,
+            "push-to-talk-delay": 0,
+            "hotkeys": {},
+            "deinterlace_mode": 0,
+            "deinterlace_field_order": 0,
+            "monitoring_type": 0,
+            "private_settings": {},
+            "name": "Decklist",
+            "uuid": "730909de-23aa-4dc6-93bc-65680ce1f6c1",
+            "id": "browser_source",
+            "versioned_id": "browser_source",
+            "settings": {
+                "url": "http://localhost:3001/overlays/decklist",
+                "width": 1920,
+                "height": 1080,
+                "fps_custom": false,
+                "fps": 30,
+                "reroute_audio": false,
+                "restart_when_active": false,
+                "shutdown": false,
+                "css": ""
+            }
+        },
+        {
+            "prev_ver": 503448577,
+            "mixers": 0,
+            "sync": 0,
+            "flags": 0,
+            "volume": 1,
+            "balance": 0.5,
+            "enabled": true,
+            "muted": false,
+            "push-to-mute": false,
+            "push-to-mute-delay": 0,
+            "push-to-talk": false,
+            "push-to-talk-delay": 0,
+            "hotkeys": {},
+            "deinterlace_mode": 0,
+            "deinterlace_field_order": 0,
+            "monitoring_type": 0,
+            "private_settings": {},
+            "name": "Deck Reveal",
+            "uuid": "5eaf2161-b1a0-458b-8d03-17c00952797b",
+            "id": "browser_source",
+            "versioned_id": "browser_source",
+            "settings": {
+                "url": "http://localhost:3001/overlays/deckreveal",
+                "width": 1920,
+                "height": 1080,
+                "fps_custom": false,
+                "fps": 30,
+                "reroute_audio": false,
+                "restart_when_active": false,
+                "shutdown": false,
+                "css": ""
+            }
+        },
+        {
+            "prev_ver": 503448577,
+            "mixers": 0,
+            "sync": 0,
+            "flags": 0,
+            "volume": 1,
+            "balance": 0.5,
+            "enabled": true,
+            "muted": false,
+            "push-to-mute": false,
+            "push-to-mute-delay": 0,
+            "push-to-talk": false,
+            "push-to-talk-delay": 0,
+            "hotkeys": {},
+            "deinterlace_mode": 0,
+            "deinterlace_field_order": 0,
+            "monitoring_type": 0,
+            "private_settings": {},
+            "name": "Standings",
+            "uuid": "1ba5c7fb-fbb7-4972-bccd-b0fa1253bd15",
+            "id": "browser_source",
+            "versioned_id": "browser_source",
+            "settings": {
+                "url": "http://localhost:3001/overlays/standings",
+                "width": 1920,
+                "height": 1080,
+                "fps_custom": false,
+                "fps": 30,
+                "reroute_audio": false,
+                "restart_when_active": false,
+                "shutdown": false,
+                "css": ""
+            }
+        },
+        {
+            "prev_ver": 503448577,
+            "mixers": 0,
+            "sync": 0,
+            "flags": 0,
+            "volume": 1,
+            "balance": 0.5,
+            "enabled": true,
+            "muted": false,
+            "push-to-mute": false,
+            "push-to-mute-delay": 0,
+            "push-to-talk": false,
+            "push-to-talk-delay": 0,
+            "hotkeys": {},
+            "deinterlace_mode": 0,
+            "deinterlace_field_order": 0,
+            "monitoring_type": 0,
+            "private_settings": {},
+            "name": "Timer",
+            "uuid": "1c1e22a9-b5e5-41a1-a8c5-da42b9e92127",
+            "id": "browser_source",
+            "versioned_id": "browser_source",
+            "settings": {
+                "url": "http://localhost:3001/overlays/timer",
+                "width": 1920,
+                "height": 1080,
+                "fps_custom": false,
+                "fps": 30,
+                "reroute_audio": false,
+                "restart_when_active": false,
+                "shutdown": false,
+                "css": ""
+            }
+        },
+        {
+            "prev_ver": 503448577,
+            "mixers": 0,
+            "sync": 0,
+            "flags": 0,
+            "volume": 1,
+            "balance": 0.5,
+            "enabled": true,
+            "muted": false,
+            "push-to-mute": false,
+            "push-to-mute-delay": 0,
+            "push-to-talk": false,
+            "push-to-talk-delay": 0,
+            "hotkeys": {},
+            "deinterlace_mode": 0,
+            "deinterlace_field_order": 0,
+            "monitoring_type": 0,
+            "private_settings": {},
+            "name": "Broadcaster",
+            "uuid": "004163f2-5097-4081-bb4f-1c76ab70a757",
+            "id": "browser_source",
+            "versioned_id": "browser_source",
+            "settings": {
+                "url": "http://localhost:3001/overlays/broadcaster",
+                "width": 1920,
+                "height": 1080,
+                "fps_custom": false,
+                "fps": 30,
+                "reroute_audio": false,
+                "restart_when_active": false,
+                "shutdown": false,
+                "css": ""
+            }
+        },
+        {
+            "prev_ver": 503448577,
+            "mixers": 0,
+            "sync": 0,
+            "flags": 0,
+            "volume": 1,
+            "balance": 0.5,
+            "enabled": true,
+            "muted": false,
+            "push-to-mute": false,
+            "push-to-mute-delay": 0,
+            "push-to-talk": false,
+            "push-to-talk-delay": 0,
+            "hotkeys": {},
+            "deinterlace_mode": 0,
+            "deinterlace_field_order": 0,
+            "monitoring_type": 0,
+            "private_settings": {},
+            "name": "Panelists",
+            "uuid": "f7af4b0a-ffd6-4b9d-9f17-10d6dc951db6",
+            "id": "browser_source",
+            "versioned_id": "browser_source",
+            "settings": {
+                "url": "http://localhost:3001/overlays/panelists",
+                "width": 1920,
+                "height": 1080,
+                "fps_custom": false,
+                "fps": 30,
+                "reroute_audio": false,
+                "restart_when_active": false,
+                "shutdown": false,
+                "css": ""
+            }
+        },
+        {
+            "prev_ver": 503448577,
+            "mixers": 0,
+            "sync": 0,
+            "flags": 0,
+            "volume": 1,
+            "balance": 0.5,
+            "enabled": true,
+            "muted": false,
+            "push-to-mute": false,
+            "push-to-mute-delay": 0,
+            "push-to-talk": false,
+            "push-to-talk-delay": 0,
+            "hotkeys": {},
+            "deinterlace_mode": 0,
+            "deinterlace_field_order": 0,
+            "monitoring_type": 0,
+            "private_settings": {},
+            "name": "Bracket",
+            "uuid": "13f341ec-a9e7-4b0e-ac36-fd09fa665406",
+            "id": "browser_source",
+            "versioned_id": "browser_source",
+            "settings": {
+                "url": "http://localhost:3001/overlays/bracket",
+                "width": 1920,
+                "height": 1080,
+                "fps_custom": false,
+                "fps": 30,
+                "reroute_audio": false,
+                "restart_when_active": false,
+                "shutdown": false,
+                "css": ""
+            }
+        },
+        {
+            "prev_ver": 503448577,
+            "mixers": 0,
+            "sync": 0,
+            "flags": 0,
+            "volume": 1,
+            "balance": 0.5,
+            "enabled": true,
+            "muted": false,
+            "push-to-mute": false,
+            "push-to-mute-delay": 0,
+            "push-to-talk": false,
+            "push-to-talk-delay": 0,
+            "hotkeys": {},
+            "deinterlace_mode": 0,
+            "deinterlace_field_order": 0,
+            "monitoring_type": 0,
+            "private_settings": {},
+            "name": "MTGStream",
+            "uuid": "001e1490-8a5b-4ee2-b91a-006fc86dfc98",
+            "id": "scene",
+            "versioned_id": "scene",
+            "settings": {
+                "custom_size": false,
+                "id_counter": 9,
+                "items": [
+                    {
+                        "name": "Nameplate",
+                        "source_uuid": "ba142638-5e6f-4bfe-805d-54ac13e58f33",
+                        "visible": true,
+                        "locked": false,
+                        "rot": 0,
+                        "pos": {
+                            "x": 0,
+                            "y": 0
+                        },
+                        "scale": {
+                            "x": 1,
+                            "y": 1
+                        },
+                        "align": 5,
+                        "bounds_type": 0,
+                        "bounds_align": 0,
+                        "bounds": {
+                            "x": 0,
+                            "y": 0
+                        },
+                        "crop_left": 0,
+                        "crop_top": 0,
+                        "crop_right": 0,
+                        "crop_bottom": 0,
+                        "id": 9,
+                        "group_item_backup": false,
+                        "scale_filter": "disable",
+                        "blend_method": "default",
+                        "blend_type": "normal",
+                        "show_transition": {
+                            "duration": 0
+                        },
+                        "hide_transition": {
+                            "duration": 0
+                        },
+                        "private_settings": {}
+                    },
+                    {
+                        "name": "Card Viewer",
+                        "source_uuid": "07c48f96-f231-4548-bd38-87c6b9b6ef38",
+                        "visible": true,
+                        "locked": false,
+                        "rot": 0,
+                        "pos": {
+                            "x": 0,
+                            "y": 0
+                        },
+                        "scale": {
+                            "x": 1,
+                            "y": 1
+                        },
+                        "align": 5,
+                        "bounds_type": 0,
+                        "bounds_align": 0,
+                        "bounds": {
+                            "x": 0,
+                            "y": 0
+                        },
+                        "crop_left": 0,
+                        "crop_top": 0,
+                        "crop_right": 0,
+                        "crop_bottom": 0,
+                        "id": 8,
+                        "group_item_backup": false,
+                        "scale_filter": "disable",
+                        "blend_method": "default",
+                        "blend_type": "normal",
+                        "show_transition": {
+                            "duration": 0
+                        },
+                        "hide_transition": {
+                            "duration": 0
+                        },
+                        "private_settings": {}
+                    },
+                    {
+                        "name": "Decklist",
+                        "source_uuid": "730909de-23aa-4dc6-93bc-65680ce1f6c1",
+                        "visible": true,
+                        "locked": false,
+                        "rot": 0,
+                        "pos": {
+                            "x": 0,
+                            "y": 0
+                        },
+                        "scale": {
+                            "x": 1,
+                            "y": 1
+                        },
+                        "align": 5,
+                        "bounds_type": 0,
+                        "bounds_align": 0,
+                        "bounds": {
+                            "x": 0,
+                            "y": 0
+                        },
+                        "crop_left": 0,
+                        "crop_top": 0,
+                        "crop_right": 0,
+                        "crop_bottom": 0,
+                        "id": 7,
+                        "group_item_backup": false,
+                        "scale_filter": "disable",
+                        "blend_method": "default",
+                        "blend_type": "normal",
+                        "show_transition": {
+                            "duration": 0
+                        },
+                        "hide_transition": {
+                            "duration": 0
+                        },
+                        "private_settings": {}
+                    },
+                    {
+                        "name": "Deck Reveal",
+                        "source_uuid": "5eaf2161-b1a0-458b-8d03-17c00952797b",
+                        "visible": true,
+                        "locked": false,
+                        "rot": 0,
+                        "pos": {
+                            "x": 0,
+                            "y": 0
+                        },
+                        "scale": {
+                            "x": 1,
+                            "y": 1
+                        },
+                        "align": 5,
+                        "bounds_type": 0,
+                        "bounds_align": 0,
+                        "bounds": {
+                            "x": 0,
+                            "y": 0
+                        },
+                        "crop_left": 0,
+                        "crop_top": 0,
+                        "crop_right": 0,
+                        "crop_bottom": 0,
+                        "id": 6,
+                        "group_item_backup": false,
+                        "scale_filter": "disable",
+                        "blend_method": "default",
+                        "blend_type": "normal",
+                        "show_transition": {
+                            "duration": 0
+                        },
+                        "hide_transition": {
+                            "duration": 0
+                        },
+                        "private_settings": {}
+                    },
+                    {
+                        "name": "Standings",
+                        "source_uuid": "1ba5c7fb-fbb7-4972-bccd-b0fa1253bd15",
+                        "visible": true,
+                        "locked": false,
+                        "rot": 0,
+                        "pos": {
+                            "x": 0,
+                            "y": 0
+                        },
+                        "scale": {
+                            "x": 1,
+                            "y": 1
+                        },
+                        "align": 5,
+                        "bounds_type": 0,
+                        "bounds_align": 0,
+                        "bounds": {
+                            "x": 0,
+                            "y": 0
+                        },
+                        "crop_left": 0,
+                        "crop_top": 0,
+                        "crop_right": 0,
+                        "crop_bottom": 0,
+                        "id": 5,
+                        "group_item_backup": false,
+                        "scale_filter": "disable",
+                        "blend_method": "default",
+                        "blend_type": "normal",
+                        "show_transition": {
+                            "duration": 0
+                        },
+                        "hide_transition": {
+                            "duration": 0
+                        },
+                        "private_settings": {}
+                    },
+                    {
+                        "name": "Timer",
+                        "source_uuid": "1c1e22a9-b5e5-41a1-a8c5-da42b9e92127",
+                        "visible": true,
+                        "locked": false,
+                        "rot": 0,
+                        "pos": {
+                            "x": 0,
+                            "y": 0
+                        },
+                        "scale": {
+                            "x": 1,
+                            "y": 1
+                        },
+                        "align": 5,
+                        "bounds_type": 0,
+                        "bounds_align": 0,
+                        "bounds": {
+                            "x": 0,
+                            "y": 0
+                        },
+                        "crop_left": 0,
+                        "crop_top": 0,
+                        "crop_right": 0,
+                        "crop_bottom": 0,
+                        "id": 4,
+                        "group_item_backup": false,
+                        "scale_filter": "disable",
+                        "blend_method": "default",
+                        "blend_type": "normal",
+                        "show_transition": {
+                            "duration": 0
+                        },
+                        "hide_transition": {
+                            "duration": 0
+                        },
+                        "private_settings": {}
+                    },
+                    {
+                        "name": "Broadcaster",
+                        "source_uuid": "004163f2-5097-4081-bb4f-1c76ab70a757",
+                        "visible": true,
+                        "locked": false,
+                        "rot": 0,
+                        "pos": {
+                            "x": 0,
+                            "y": 0
+                        },
+                        "scale": {
+                            "x": 1,
+                            "y": 1
+                        },
+                        "align": 5,
+                        "bounds_type": 0,
+                        "bounds_align": 0,
+                        "bounds": {
+                            "x": 0,
+                            "y": 0
+                        },
+                        "crop_left": 0,
+                        "crop_top": 0,
+                        "crop_right": 0,
+                        "crop_bottom": 0,
+                        "id": 3,
+                        "group_item_backup": false,
+                        "scale_filter": "disable",
+                        "blend_method": "default",
+                        "blend_type": "normal",
+                        "show_transition": {
+                            "duration": 0
+                        },
+                        "hide_transition": {
+                            "duration": 0
+                        },
+                        "private_settings": {}
+                    },
+                    {
+                        "name": "Panelists",
+                        "source_uuid": "f7af4b0a-ffd6-4b9d-9f17-10d6dc951db6",
+                        "visible": true,
+                        "locked": false,
+                        "rot": 0,
+                        "pos": {
+                            "x": 0,
+                            "y": 0
+                        },
+                        "scale": {
+                            "x": 1,
+                            "y": 1
+                        },
+                        "align": 5,
+                        "bounds_type": 0,
+                        "bounds_align": 0,
+                        "bounds": {
+                            "x": 0,
+                            "y": 0
+                        },
+                        "crop_left": 0,
+                        "crop_top": 0,
+                        "crop_right": 0,
+                        "crop_bottom": 0,
+                        "id": 2,
+                        "group_item_backup": false,
+                        "scale_filter": "disable",
+                        "blend_method": "default",
+                        "blend_type": "normal",
+                        "show_transition": {
+                            "duration": 0
+                        },
+                        "hide_transition": {
+                            "duration": 0
+                        },
+                        "private_settings": {}
+                    },
+                    {
+                        "name": "Bracket",
+                        "source_uuid": "13f341ec-a9e7-4b0e-ac36-fd09fa665406",
+                        "visible": true,
+                        "locked": false,
+                        "rot": 0,
+                        "pos": {
+                            "x": 0,
+                            "y": 0
+                        },
+                        "scale": {
+                            "x": 1,
+                            "y": 1
+                        },
+                        "align": 5,
+                        "bounds_type": 0,
+                        "bounds_align": 0,
+                        "bounds": {
+                            "x": 0,
+                            "y": 0
+                        },
+                        "crop_left": 0,
+                        "crop_top": 0,
+                        "crop_right": 0,
+                        "crop_bottom": 0,
+                        "id": 1,
+                        "group_item_backup": false,
+                        "scale_filter": "disable",
+                        "blend_method": "default",
+                        "blend_type": "normal",
+                        "show_transition": {
+                            "duration": 0
+                        },
+                        "hide_transition": {
+                            "duration": 0
+                        },
+                        "private_settings": {}
+                    }
+                ]
+            }
+        }
+    ],
+    "groups": [],
+    "transitions": [],
+    "quick_transitions": [],
+    "saved_projectors": [],
+    "current_transition": "Fade",
+    "transition_duration": 300,
+    "preview_locked": false,
+    "scaling_enabled": false,
+    "scaling_level": 0,
+    "scaling_off_x": 0,
+    "scaling_off_y": 0,
+    "resolution": {
+        "cx": 1920,
+        "cy": 1080
+    }
+}
