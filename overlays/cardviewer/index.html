@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Card Viewer Overlay</title>
+  <link rel="stylesheet" href="/overlays/theme.css" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -14,22 +15,25 @@
       font-family: 'Segoe UI', system-ui, sans-serif;
     }
 
-    /* Left side, above the nameplate. Just the card — the printed card already
-       carries its own name, mana cost and type line, so an info pill under it
-       was restating what the viewer can plainly read. */
+    /* Centered in the nameplate overlay's reserved left column (see
+       overlays/nameplate: #card-preview-slot, width 320px) — vertically
+       centered between the top and bottom nameplate bars. Just the card —
+       the printed card already carries its own name, mana cost and type
+       line, so an info pill under it was restating what the viewer can
+       plainly read. */
     #viewer {
       position: absolute;
-      bottom: 160px;
-      left: 80px;
+      top: 50%;
+      left: 20px;
       opacity: 0;
-      transform: translateY(20px) scale(0.95);
+      transform: translateY(calc(-50% + 20px)) scale(0.95);
       transition: opacity 0.35s ease, transform 0.35s ease;
       pointer-events: none;
     }
 
     #viewer.visible {
       opacity: 1;
-      transform: translateY(0) scale(1);
+      transform: translateY(-50%) scale(1);
     }
 
     #card-image {
@@ -60,8 +64,8 @@
       width: 48px;
       height: 48px;
       border-radius: 50%;
-      background: rgba(124,58,237,0.15);
-      border: 2px solid rgba(124,58,237,0.3);
+      background: var(--plph-gold-faint);
+      border: 2px solid var(--plph-gold-soft);
     }
   </style>
 </head>

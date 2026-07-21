@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Standings Overlay</title>
+  <link rel="stylesheet" href="/overlays/theme.css" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -64,7 +65,8 @@
       border-radius: 12px;
       border: 1px solid rgba(255,255,255,0.07);
       overflow: hidden;
-      border-top: 3px solid #7c3aed;
+      border-top: 3px solid transparent;
+      border-image: var(--plph-gradient) 1;
     }
 
     .table-head {
@@ -97,7 +99,7 @@
     .standings-row:last-child { border-bottom: none; }
     .standings-row:hover { background: rgba(255,255,255,0.03); }
 
-    .standings-row.top { background: rgba(124,58,237,0.08); }
+    .standings-row.top { background: var(--plph-gold-faint); }
 
     .rank {
       font-size: 18px;
@@ -106,7 +108,7 @@
       text-align: center;
     }
 
-    .standings-row.top .rank { color: #7c3aed; }
+    .standings-row.top .rank { color: var(--plph-gold); }
 
     .player-cell {
       display: flex;
@@ -129,7 +131,7 @@
     .player-deck {
       font-size: 13px;
       font-weight: 500;
-      color: rgba(167,139,250,0.75);
+      color: var(--plph-gold-dim);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;

@@ -22,17 +22,10 @@ export default function OverlayBar({ state }) {
   const toggleDeckReveal = (idx) =>
     set({ deckRevealActive: o.deckRevealActive === idx ? null : idx })
 
-  // Decklist sidebars are independent: P1's renders on the left and P2's on the
-  // right, so either, both, or neither can be on air. Each button toggles its
-  // own player in or out of the list.
-  const decklistUp = Array.isArray(o.decklistActive) ? o.decklistActive : []
-
+  // Decklist sidebar is full-height on the right, so only one player's can be
+  // up — clicking the active one again pulls it down, same as deck reveal.
   const toggleDecklist = (idx) =>
-    set({
-      decklistActive: decklistUp.includes(idx)
-        ? decklistUp.filter(i => i !== idx)
-        : [...decklistUp, idx],
-    })
+    set({ decklistActive: o.decklistActive === idx ? null : idx })
 
   return (
     <div className="overlay-bar">
@@ -53,9 +46,9 @@ export default function OverlayBar({ state }) {
       {[0, 1].map(i => (
         <button
           key={`dl${i}`}
-          className={`ob-btn${decklistUp.includes(i) ? ' on' : ''}`}
+          className={`ob-btn${o.decklistActive === i ? ' on' : ''}`}
           onClick={() => toggleDecklist(i)}
-          title={`Decklist sidebar — ${i === 0 ? 'left' : 'right'} of screen. Both can be up at once.`}
+          title="Decklist sidebar — right of screen. Only one at a time."
         >
           Decklist: {players[i]?.name || `P${i + 1}`}
         </button>

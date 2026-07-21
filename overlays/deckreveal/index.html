@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Deck Reveal Overlay</title>
+  <link rel="stylesheet" href="/overlays/theme.css" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -37,7 +38,8 @@
       align-items: stretch;
       background: rgba(8, 8, 8, 0.88);
       backdrop-filter: blur(12px);
-      border-bottom: 3px solid #7c3aed;
+      border-bottom: 3px solid transparent;
+      border-image: var(--plph-gradient) 1;
       height: 136px;
       padding: 0 48px;
       gap: 0;
@@ -55,7 +57,7 @@
     .deck-label {
       font-size: 11px;
       font-weight: 700;
-      color: rgba(167,139,250,0.7);
+      color: var(--plph-gold-dim);
       text-transform: uppercase;
       letter-spacing: 2.5px;
       margin-bottom: 8px;
@@ -101,7 +103,7 @@
     .player-record {
       font-size: 30px;
       font-weight: 800;
-      color: #c4b5fd;
+      color: var(--plph-gold);
       line-height: 1;
       letter-spacing: -0.5px;
       margin-top: 8px;
@@ -252,8 +254,8 @@
     }
 
     .qty-label.max {
-      color: #c4b5fd;
-      border-color: rgba(167,139,250,0.25);
+      color: var(--plph-gold);
+      border-color: var(--plph-gold-soft);
     }
 
     /* loading / empty */
@@ -352,7 +354,7 @@
 
         if (barH > 0) {
           const barY = baseY - barH
-          content += `<rect x="${barX}" y="${barY}" width="${barW}" height="${barH}" fill="#d4af37" rx="1" opacity="0.88"/>`
+          content += `<rect x="${barX}" y="${barY}" width="${barW}" height="${barH}" fill="#fbbf24" rx="1" opacity="0.88"/>`
           if (barH >= 14) {
             content += `<text x="${barX + barW / 2}" y="${barY - 2}" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.75)" font-family="system-ui,sans-serif">${count}</text>`
           }

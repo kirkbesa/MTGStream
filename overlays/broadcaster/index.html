@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Broadcaster Overlay</title>
+  <link rel="stylesheet" href="/overlays/theme.css" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -38,7 +39,8 @@
       width: calc(50% - 24px);
       background: rgba(10, 10, 10, 0.88);
       backdrop-filter: blur(10px);
-      border-top: 4px solid #7c3aed;
+      border-top: 4px solid transparent;
+      border-image: var(--plph-gradient) 1;
       border-radius: 10px;
       padding: 18px 32px 22px;
       display: flex;
@@ -55,7 +57,7 @@
     .bc-role {
       font-size: 12px;
       font-weight: 800;
-      color: rgba(167,139,250,0.7);
+      color: var(--plph-gold-dim);
       text-transform: uppercase;
       letter-spacing: 2.5px;
       line-height: 1;

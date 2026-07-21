@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Decklist Overlay</title>
+  <link rel="stylesheet" href="/overlays/theme.css" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -14,10 +15,9 @@
       font-family: 'Segoe UI', system-ui, sans-serif;
     }
 
-    /* One panel per player, each pinned to that player's side of the screen —
-       P1 left, P2 right, matching where they sit on the nameplate. They're
-       independent, so either, both, or neither can be on air; two lists side by
-       side is what a caster comparing decks actually wants.
+    /* Single panel, pinned to the right of the screen. Only one player's list
+       is ever up at a time — selecting the other one replaces it, same as
+       deck reveal — so there's no left/right split to manage.
 
        Height follows the content: a fixed height leaves a slab of empty dark
        panel under a short list. Growth stops at MAX_PANEL_H, past which the
@@ -25,6 +25,7 @@
     .panel {
       position: absolute;
       top: 60px;
+      right: 60px;
       width: 400px;
       max-height: 960px;      /* keep in sync with MAX_PANEL_H below */
       background: rgba(10,10,10,0.88);
@@ -35,12 +36,9 @@
       display: flex;
       flex-direction: column;
       opacity: 0;
+      transform: translateX(20px);
       transition: opacity 0.35s ease, transform 0.35s ease;
     }
-
-    /* Each slides in from its nearest edge. */
-    #panel-0 { left: 60px;  transform: translateX(-20px); }
-    #panel-1 { right: 60px; transform: translateX(20px); }
 
     .panel.visible {
       opacity: 1;
@@ -51,7 +49,8 @@
       padding: 16px 20px 12px;
       border-bottom: 1px solid rgba(255,255,255,0.08);
       flex-shrink: 0;
-      border-top: 3px solid #7c3aed;
+      border-top: 3px solid transparent;
+      border-image: var(--plph-gradient) 1;
       border-radius: 12px 12px 0 0;
     }
 
@@ -117,7 +116,7 @@
     }
 
     /* A full playset — the cards that define the deck */
-    .card-count.max { color: #d4af37; }
+    .card-count.max { color: var(--plph-gold); }
 
     .card-name {
       flex: 1;
@@ -135,22 +134,13 @@
   </style>
 </head>
 <body>
-  <div class="panel" id="panel-0">
-    <div class="panel-header" id="header-0">
-      <div class="header-player" id="header-player-0">Player</div>
-      <div class="header-deck"   id="header-deck-0"></div>
-      <div class="header-count"  id="header-count-0"></div>
+  <div class="panel" id="panel">
+    <div class="panel-header" id="header">
+      <div class="header-player" id="header-player">Player</div>
+      <div class="header-deck"   id="header-deck"></div>
+      <div class="header-count"  id="header-count"></div>
     </div>
-    <div class="scroll-area" id="scroll-area-0"></div>
-  </div>
-
-  <div class="panel" id="panel-1">
-    <div class="panel-header" id="header-1">
-      <div class="header-player" id="header-player-1">Player</div>
-      <div class="header-deck"   id="header-deck-1"></div>
-      <div class="header-count"  id="header-count-1"></div>
-    </div>
-    <div class="scroll-area" id="scroll-area-1"></div>
+    <div class="scroll-area" id="scroll-area"></div>
   </div>
 
   <script src="/overlays/ws.js"></script>
@@ -165,21 +155,12 @@
       return state.matches?.[state.activeMatchIndex ?? 0] ?? null
     }
 
-    // Which players' lists are up. An array — both can be on air at once. Older
-    // saves stored a single index, so tolerate that shape too.
-    function activeIndices(state) {
-      const v = state.overlay?.decklistActive
-      if (Array.isArray(v)) return v
-      if (Number.isFinite(v)) return [v]
-      return []
-    }
-
     // Only scales down, and only when a list is too long to fit the cap. A
     // normal 60+15 list renders at 1:1 and the panel simply ends where the
     // cards end.
-    function fitContent(pi) {
-      const scrollArea = document.getElementById(`scroll-area-${pi}`)
-      const header     = document.getElementById(`header-${pi}`)
+    function fitContent() {
+      const scrollArea = document.getElementById('scroll-area')
+      const header     = document.getElementById('header')
       scrollArea.style.zoom = 1
       const availH   = MAX_PANEL_H - header.offsetHeight
       const naturalH = scrollArea.scrollHeight
@@ -192,35 +173,27 @@
     // so rendering is pure DOM work — no fetch, nothing to await, and nothing
     // that can fail if the venue network drops mid-match.
     function render(state) {
-      const up = activeIndices(state)
+      const pi    = state.overlay?.decklistActive
+      const panel = document.getElementById('panel')
 
-      for (const pi of [0, 1]) {
-        const panel = document.getElementById(`panel-${pi}`)
+      const player = Number.isFinite(pi) ? getActive(state)?.players?.[pi] : null
+      if (!player) { panel.classList.remove('visible'); return }
 
-        if (!up.includes(pi)) {
-          panel.classList.remove('visible')
-          continue
-        }
-
-        const player = getActive(state)?.players?.[pi]
-        if (!player) { panel.classList.remove('visible'); continue }
-
-        panel.classList.add('visible')
-        renderPanel(pi, player)
-      }
+      panel.classList.add('visible')
+      renderPanel(player)
     }
 
-    function renderPanel(pi, player) {
-      const scrollArea = document.getElementById(`scroll-area-${pi}`)
+    function renderPanel(player) {
+      const scrollArea = document.getElementById('scroll-area')
 
-      document.getElementById(`header-player-${pi}`).textContent = player.name || 'TBD'
-      document.getElementById(`header-deck-${pi}`).textContent   = player.deckName || ''
+      document.getElementById('header-player').textContent = player.name || 'TBD'
+      document.getElementById('header-deck').textContent   = player.deckName || ''
 
       const deck = player.decklist
       scrollArea.innerHTML = ''
 
       if (!deck) {
-        document.getElementById(`header-count-${pi}`).textContent = 'No decklist loaded'
+        document.getElementById('header-count').textContent = 'No decklist loaded'
         return
       }
 
@@ -229,7 +202,7 @@
       const mainCount = main.reduce((n, c) => n + c.count, 0)
       const sideCount = side.reduce((n, c) => n + c.count, 0)
 
-      document.getElementById(`header-count-${pi}`).textContent =
+      document.getElementById('header-count').textContent =
         `${mainCount} cards${sideCount ? ` · ${sideCount} sideboard` : ''}`
 
       for (const [type, rows] of MTG.groupByType(main)) {
@@ -266,7 +239,7 @@
         scrollArea.appendChild(groupEl)
       }
 
-      fitContent(pi)
+      fitContent()
     }
 
     function buildGroup(type, rows, { sideboard = false } = {}) {

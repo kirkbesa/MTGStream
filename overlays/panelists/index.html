@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Panelists Overlay</title>
+  <link rel="stylesheet" href="/overlays/theme.css" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -38,7 +39,7 @@
       width: calc(50% - 24px);
       background: rgba(10, 10, 10, 0.88);
       backdrop-filter: blur(10px);
-      border-top: 4px solid #0ea5e9;
+      border-top: 4px solid var(--plph-blue);
       border-radius: 10px;
       padding: 18px 32px 22px;
       display: flex;
@@ -54,7 +55,7 @@
     .pn-role {
       font-size: 12px;
       font-weight: 800;
-      color: rgba(56,189,248,0.7);
+      color: var(--plph-blue-dim);
       text-transform: uppercase;
       letter-spacing: 2.5px;
       line-height: 1;

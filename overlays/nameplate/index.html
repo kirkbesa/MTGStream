@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Nameplate Overlay</title>
+  <link rel="stylesheet" href="/overlays/theme.css" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -16,67 +17,76 @@
 
     #nameplate {
       position: absolute;
-      bottom: 0;
+      inset: 0;
+    }
+
+    /* ── Left column — reserved for the card-preview overlay ──────
+       Not rendered here (overlays/cardviewer draws the actual card);
+       this just keeps both bars clear of it and centered on the rest
+       of the frame, so the two layers never fight for the same pixels. */
+    #card-preview-slot {
+      position: absolute;
       left: 0;
+      top: 0;
+      bottom: 0;
+      width: var(--card-col, 320px);
+      pointer-events: none;
+    }
+
+    /* ── Top / bottom bars — one per player, full width minus the
+       reserved card column ──────────────────────────────────────── */
+    .bar {
+      position: absolute;
+      left: var(--card-col, 320px);
       right: 0;
-      /* Grid locks the center block to the true screen midpoint.
-         1fr auto 1fr: each player fills exactly half the remaining space;
-         the center column never moves regardless of player name length. */
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      align-items: stretch;
-      padding: 0 48px 40px;
+      display: flex;
       opacity: 0;
-      transform: translateY(12px);
       transition: opacity 0.35s ease, transform 0.35s ease;
     }
 
-    #nameplate.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    .bar-top    { top: 0;    transform: translateY(-14px); }
+    .bar-bottom { bottom: 0; transform: translateY(14px); }
 
-    /* ── Player panels ─────────────────────────────────── */
-    .player {
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;  /* pin the play/draw marker + player-inner to the bottom */
-      min-width: 0;               /* allow grid to constrain width */
-    }
+    .bar.visible { opacity: 1; transform: translateY(0); }
 
-    /* Horizontal flex: info section + In Play block side by side */
-    .player-inner {
-      flex: 1;              /* grow to fill .player wrapper — equalises both panels */
+    .bar-inner {
+      flex: 1;
       display: flex;
-      flex-direction: row;
       align-items: stretch;
-      background: rgba(10, 10, 10, 0.82);
+      background: rgba(10, 10, 10, 0.84);
       backdrop-filter: blur(8px);
-      border-top: 3px solid var(--accent, #7c3aed);
-      overflow: hidden; /* clips in-play block corners cleanly */
     }
 
-    .player-1 .player-inner { border-radius: 8px 0 0 8px; }
-    .player-2 .player-inner {
-      border-radius: 0 8px 8px 0;
-      flex-direction: row-reverse; /* in-play block goes to the left (inner) side */
+    /* Brand gradient stripe on the edge facing the game area (center of
+       screen), rounded on the inner corner nearest the card column. */
+    .bar-top .bar-inner {
+      border-bottom: 3px solid transparent;
+      border-image: var(--plph-gradient) 1;
+      border-radius: 0 0 0 12px;
+    }
+
+    .bar-bottom .bar-inner {
+      border-top: 3px solid transparent;
+      border-image: var(--plph-gradient) 1;
+      border-radius: 12px 0 0 0;
     }
 
     /* Info content */
     .player-content {
       flex: 1;
       min-width: 0;
-      padding: 14px 20px 12px;
+      padding: 14px 24px 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
 
-    /* ── Name + record row ─────────────────────────────── */
+    /* ── Name + record + play-indicator row ────────────────────── */
     .name-row {
       display: flex;
       align-items: baseline;
       gap: 10px;
     }
-
-    .player-2 .name-row { flex-direction: row-reverse; }
 
     .player-name {
       font-size: 28px;
@@ -86,8 +96,7 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      flex: 1;
-      min-width: 0;
+      max-width: 480px;
     }
 
     .player-record {
@@ -97,6 +106,24 @@
       flex-shrink: 0;
       line-height: 1.15;
     }
+
+    .play-label {
+      margin-left: auto;
+      flex-shrink: 0;
+      font-size: 11px;
+      font-weight: 800;
+      color: #1a1005;
+      background: var(--plph-gold);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      opacity: 0;
+      transition: opacity 0.35s ease;
+      white-space: nowrap;
+    }
+
+    .play-label.visible { opacity: 1; }
 
     .player-meta {
       font-size: 14px;
@@ -109,7 +136,7 @@
 
     .player-deck {
       font-size: 15px;
-      color: rgba(255,255,255,0.75);
+      color: var(--plph-gold-dim);
       margin-top: 4px;
       font-style: italic;
       white-space: nowrap;
@@ -117,13 +144,9 @@
       text-overflow: ellipsis;
     }
 
-    .player-2 .player-name { text-align: right; }
-    .player-2 .player-meta { text-align: right; }
-    .player-2 .player-deck { text-align: right; }
-
-    /* ── Life block — inner edge of each panel ─────────── */
+    /* ── Life block ─────────────────────────────────────────────── */
     .life-block {
-      width: 84px;
+      width: 88px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -143,7 +166,7 @@
     }
 
     .life-value {
-      font-size: 52px;
+      font-size: 48px;
       font-weight: 800;
       line-height: 1;
       color: #ffffff;
@@ -181,35 +204,17 @@
     .counter-badge.poison { background: rgba(74,222,128,0.16); color: #4ade80; }
     .counter-badge.energy { background: rgba(250,204,21,0.16); color: #facc15; }
 
-    /* ── "On the Play" label above the nameplate ───────── */
-    .play-label {
-      font-size: 12px;
-      font-weight: 800;
-      color: #fbbf24;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      padding-bottom: 7px;
-      opacity: 0;
-      transition: opacity 0.35s ease;
-      white-space: nowrap;
-    }
-
-    .play-label.visible { opacity: 1; }
-
-    /* Aligned toward the inner (life) side */
-    .player-1 .play-label { text-align: right; }
-    .player-2 .play-label { text-align: left; }
-
-    /* ── Center score block ────────────────────────────── */
+    /* ── Score / round bug — top bar only, far right ───────────── */
     #score-block {
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-end;
-      padding: 0 12px;
+      justify-content: center;
+      padding: 0 22px;
       gap: 4px;
       flex-shrink: 0;
       min-width: 120px;
+      border-left: 1px solid rgba(255,255,255,0.08);
     }
 
     .score-boxes {
@@ -219,22 +224,22 @@
     }
 
     .score-box {
-      width: 44px;
-      height: 52px;
+      width: 40px;
+      height: 46px;
       background: rgba(10,10,10,0.88);
-      backdrop-filter: blur(8px);
-      border-top: 3px solid #7c3aed;
+      border-top: 3px solid transparent;
+      border-image: var(--plph-gradient) 1;
       border-radius: 6px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 28px;
+      font-size: 26px;
       font-weight: 800;
       color: #fff;
     }
 
     .score-sep {
-      font-size: 22px;
+      font-size: 20px;
       font-weight: 700;
       color: rgba(255,255,255,0.4);
     }
@@ -252,21 +257,22 @@
     #score-block.swiss .round-label {
       font-size: 15px;
       color: rgba(255,255,255,0.6);
-      padding-bottom: 16px;
     }
   </style>
 </head>
 <body>
   <div id="nameplate">
 
-    <!-- Player 1 -->
-    <div class="player player-1">
-      <div class="play-label" id="play-label-p1">On the Play</div>
-      <div class="player-inner">
+    <div id="card-preview-slot"></div>
+
+    <!-- Player 1 — top bar -->
+    <div class="bar bar-top" id="bar-p1">
+      <div class="bar-inner">
         <div class="player-content">
           <div class="name-row">
             <div class="player-name" id="p1-name">Player 1</div>
             <div class="player-record" id="p1-record"></div>
+            <div class="play-label" id="play-label-p1">On the Play</div>
           </div>
           <div class="player-meta" id="p1-meta"></div>
           <div class="player-deck" id="p1-deck"></div>
@@ -276,28 +282,25 @@
           <div class="life-value" id="life-p1">20</div>
           <div class="counter-badges" id="counters-p1"></div>
         </div>
+        <div id="score-block" class="swiss">
+          <div class="score-boxes">
+            <div class="score-box" id="score-p1">0</div>
+            <div class="score-sep">–</div>
+            <div class="score-box" id="score-p2">0</div>
+          </div>
+          <div class="round-label" id="round-label">Round 1</div>
+        </div>
       </div>
     </div>
 
-    <!-- Center score block -->
-    <div id="score-block" class="swiss">
-      <div class="score-boxes">
-        <div class="score-box" id="score-p1">0</div>
-        <div class="score-sep">–</div>
-        <div class="score-box" id="score-p2">0</div>
-      </div>
-      <div class="round-label" id="round-label">Round 1</div>
-    </div>
-
-    <!-- Player 2 -->
-    <div class="player player-2">
-      <div class="play-label" id="play-label-p2">On the Play</div>
-      <div class="player-inner">
-        <!-- DOM order same as P1; row-reverse CSS moves the life block to the left (inner) side -->
+    <!-- Player 2 — bottom bar -->
+    <div class="bar bar-bottom" id="bar-p2">
+      <div class="bar-inner">
         <div class="player-content">
           <div class="name-row">
             <div class="player-name" id="p2-name">Player 2</div>
             <div class="player-record" id="p2-record"></div>
+            <div class="play-label" id="play-label-p2">On the Play</div>
           </div>
           <div class="player-meta" id="p2-meta"></div>
           <div class="player-deck" id="p2-deck"></div>
@@ -323,7 +326,8 @@
       return state.matches?.[state.activeMatchIndex ?? 0] ?? null
     }
 
-    const nameplate = document.getElementById('nameplate')
+    const barP1 = document.getElementById('bar-p1')
+    const barP2 = document.getElementById('bar-p2')
 
     function render(state) {
       const active = getActive(state)
@@ -331,8 +335,13 @@
       const { match, players } = active
       const overlay = state.overlay
 
-      if (!overlay.nameplateVisible) { nameplate.classList.remove('visible'); return }
-      nameplate.classList.add('visible')
+      if (!overlay.nameplateVisible) {
+        barP1.classList.remove('visible')
+        barP2.classList.remove('visible')
+        return
+      }
+      barP1.classList.add('visible')
+      barP2.classList.add('visible')
 
       const [p1, p2] = players
       const isTopCut  = match.format === 'topcut'
