@@ -548,8 +548,13 @@
       if (metaEl) metaEl.style.display = (handle || pronouns) ? '' : 'none'
     }
 
-    function buildGrid(rows, cardZoomActive) {
-      const groups = MTG.groupByType(rows)
+    function buildGrid(main, side, cardZoomActive) {
+      const groups = MTG.groupByType(main)
+
+      // Sideboard cards keep their own section rather than being folded into
+      // the mainboard's type groups — same "one labeled block, not resorted
+      // into Creature/Instant/etc." treatment as the decklist overlay.
+      if (side.length > 0) groups.push(['Sideboard', side])
 
       // planLayout packs the groups into columns and hands back which groups
       // landed in which column, so we render straight from its decision.
@@ -584,11 +589,14 @@
         groupEl.className = 'type-group'
 
         const groupTotal = cards.reduce((n, c) => n + c.count, 0)
+        // "Sideboard" isn't a card type — MTG.plural would turn it into
+        // "Sideboards" past a count of one, so it skips the pluraliser.
+        const label = typeName === 'Sideboard' ? 'Sideboard' : MTG.plural(typeName, groupTotal)
         const headerEl = document.createElement('div')
         headerEl.className = 'type-header'
         headerEl.innerHTML =
           `<div class="type-header-inner">` +
-          `<span class="type-name">${MTG.plural(typeName, groupTotal)}</span>` +
+          `<span class="type-name">${label}</span>` +
           `<span class="type-count">${groupTotal}</span></div>`
         groupEl.appendChild(headerEl)
 
@@ -678,11 +686,13 @@
       }
       lastCardZoom = cardZoomActive
 
-      // The deck reveal shows the mainboard — the sideboard is a separate story
-      // beat and would blow the grid layout past its 892px vertical budget.
+      // Charts (mana curve, type/color breakdown) stay mainboard-only — the
+      // sideboard isn't part of what the deck actually casts game to game —
+      // but the card grid shows both, mainboard then sideboard.
       const main = player.decklist?.main ?? []
+      const side = player.decklist?.side ?? []
 
-      if (main.length === 0) {
+      if (main.length === 0 && side.length === 0) {
         gridArea.innerHTML = '<div class="grid-empty">No decklist loaded</div>'
         gridBuilt = false
         return
@@ -690,7 +700,7 @@
 
       // Only rebuild the DOM when something structural changed
       if (!gridBuilt || zoomChanged) {
-        buildGrid(main, cardZoomActive)
+        buildGrid(main, side, cardZoomActive)
         buildCharts(main)
         gridBuilt = true
       }
